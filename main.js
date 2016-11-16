@@ -10,11 +10,11 @@ scope.console = console;
 var myScript = [
   {type: 'var', name: 'myFunction', value: {type: 'function', args: ['var1'], value: [
     {type: 'var', name: 'test', value: {type: 'raw', data: 'test'}},
-    {type: 'assign', var: 'test', value: {type: 'raw', data: 'test 2'}},
+    {type: '=', var: 'test', value: {type: 'raw', data: 'test 2'}},
     {type: 'if', condition: {type: 'raw', data: true},
       then: [
         {type: 'call', value: 'log', args: [{type: 'raw', data: 'if 1 true'}]},
-        {type: 'assign', var: 'myArr', value: {type: 'raw', data: [1]}}
+        {type: '=', var: 'myArr', value: {type: 'raw', data: [1]}}
       ],
       else: [
         {type: 'return', value: {type: 'raw', data: false}}
@@ -44,7 +44,7 @@ var myScript = [
   ]}},
   {type: 'var', name: 'myArr', value: {type: 'raw', data: []}},
   {type: 'var', name: 'myObj', value: {type: 'raw', data: {}}},
-  {type: 'assign', var: 'myObj.test', value: {type: 'raw', data: 'test obj item'}},
+  {type: '=', var: 'myObj.test', value: {type: 'raw', data: 'test obj item'}},
   {type: 'var', name: 'myUndefined', value: {type: 'raw', data: undefined}},
   {type: 'var', name: 'myNull', value: {type: 'raw', data: null}},
   {type: 'var', name: 'myRegExp', value: {type: 'regexp', pattern: 'test'}},
@@ -146,7 +146,15 @@ var getLocalScope = function (scope, context, args, callArgs) {
   return localScope;
 };
 
-var getVariableScope = function (scope, variable) {
+var getVariableScope = function (scope, _variable) {
+  var variable = _variable;
+
+  var items = null;
+  if (typeof variable === 'string') {
+      items = variable.split('.');
+      variable = items.shift();
+  }
+
   var _scope;
   while (!scope.hasOwnProperty(variable)) {
     _scope = scope.prototype;
@@ -155,6 +163,14 @@ var getVariableScope = function (scope, variable) {
     }
     scope = _scope;
   }
+
+  if (items) {
+    while (items.length) {
+        scope = scope[variable];
+        variable = items.shift();
+    }
+  }
+
   return scope;
 };
 
@@ -190,22 +206,25 @@ var commands = {
     }
     return fn.apply(context, fnArgs);
   },
-  assign: function (scope, command) {
+  '=': function (scope, command) {
     var value = getVariableValue(scope, command.value);
     var variable = command.var;
-    var varScope;
-    if (typeof variable !== 'string') {
-      varScope = getVariableScope(scope, variable);
-    } else {
-      var items = variable.split('.');
-      variable = items.shift();
-      varScope = getVariableScope(scope, variable);
-      while (items.length) {
-        varScope = varScope[variable];
-        variable = items.shift();
-      }
-    }
+    var varScope = getVariableScope(scope, variable);
     varScope[variable] = value;
+    return value;
+  },
+  '+=': function (scope, command) {
+    var value = getVariableValue(scope, command.value);
+    var variable = command.var;
+    var varScope = getVariableScope(scope, variable);
+    varScope[variable] += value;
+    return value;
+  },
+  '-=': function (scope, command) {
+    var value = getVariableValue(scope, command.value);
+    var variable = command.var;
+    var varScope = getVariableScope(scope, variable);
+    varScope[variable] += value;
     return value;
   },
   return: function (scope, command) {
