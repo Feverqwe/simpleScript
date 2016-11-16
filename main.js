@@ -39,6 +39,9 @@ var myScript = [
     {type: 'call', value: 'log', args: ['var1']},
     {type: 'return', value: 'test'}
   ]}},
+  {type: 'var', name: 'myFunctionWithContext', value: {type: 'function', args: ['var1'], value: [
+    {type: 'call', value: 'log', args: ['this', 'var1']}
+  ]}},
   {type: 'var', name: 'myArr', value: {type: 'raw', data: []}},
   {type: 'var', name: 'myObj', value: {type: 'raw', data: {}}},
   {type: 'assign', var: 'myObj.test', value: {type: 'raw', data: 'test obj item'}},
@@ -49,6 +52,9 @@ var myScript = [
   {type: 'var', name: 'myVarB', value: {type: 'raw', data: 2}},
   {type: 'call', value: 'log', args: [
       {type: 'call', value: 'myFunction', args: [{type: 'raw', data: 'arg1'}]}
+  ]},
+  {type: 'call', value: 'myFunctionWithContext', context: {type: 'raw', data: {a:1, b: 2}}, args: [
+      {type: 'raw', data: 'arg1value'}
   ]},
   {type: 'call', value: 'log', args: ['myArr']},
   {type: 'call', value: 'log', args: ['myObj', 'myObj.test']},
