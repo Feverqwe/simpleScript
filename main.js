@@ -77,7 +77,7 @@ var myScript = [
 
 var getVariable = function (scope, variable) {
   if (typeof variable !== 'string') {
-    return scope[variable];
+    return {value: scope[variable], context: scope};
   }
 
   var items = variable.split('.');
