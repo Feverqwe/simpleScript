@@ -12,20 +12,21 @@ var myScript = [
     {type: 'var', name: 'test', value: {type: 'raw', data: 'test'}},
     {type: 'assign', var: 'test', value: {type: 'raw', data: 'test 2'}},
     {type: 'if', condition: {type: 'raw', data: true},
-      then: {type: 'exec', value: {type: 'function', value: [
+      then: [
         {type: 'exec', value: 'log', args: [{type: 'raw', data: 'if 1 true'}]},
-        {type: 'assign', var: 'myArr', value: {type: 'raw', data: [1]}},
-        {type: 'return', value: {type: 'raw', data: true}}
-      ]}},
-      else: {type: 'function', value: [
-        {type: 'return', value: {type: 'raw', data: true}}
-      ]}
+        {type: 'assign', var: 'myArr', value: {type: 'raw', data: [1]}}
+      ],
+      else: [
+        {type: 'return', value: {type: 'raw', data: false}}
+      ]
     },
     {type: 'if', not: true, condition: {type: 'raw', data: true},
-      then: {type: 'return', value: {type: 'raw', data: 'abort'}}
+      then: [
+          {type: 'return', value: {type: 'raw', data: 'abort'}}
+      ]
     },
     {type: 'if', condition: {type: 'raw', data: true},
-      then: {type: 'statement', value: [
+      then: [
         {type: 'exec', value: 'console.log', args: [{type: 'raw', data: 'is block statement'}]},
         {type: 'exec', value: 'console.log', args: [
           {type: 'statement', value: [
@@ -33,7 +34,7 @@ var myScript = [
             {type: 'raw', data: 'statement result last'}
           ]}
         ]}
-      ]}
+      ]
     },
     {type: 'exec', value: 'log', args: ['var1']},
     {type: 'return', value: 'test'}
@@ -238,9 +239,9 @@ var commands = {
         result = !result;
       }
       if (result) {
-        return command.then && getVariableValue(scope, command.then);
+        return command.then && execScript(scope, command.then);
       } else {
-        return command.else && getVariableValue(scope, command.else);
+        return command.else && execScript(scope, command.else);
       }
     });
   },
