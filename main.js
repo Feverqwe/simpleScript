@@ -65,7 +65,7 @@ var myScript = [
     {type: 'throw', value: {type: 'raw', data: 'Throw hear!'}},
     {type: 'exec', value: 'console.log', args: [{type: 'raw', data: 'after throw'}]}
   ], args: ['err'], catch: [
-    {type: 'exec', value: 'console.error', args: ['err']}
+    {type: 'exec', value: 'console.log', args: ['err']}
   ]},
   {type: 'exec', value: 'log', args: [
     {type: '+', args: ['myVarA', 'myVarB']},
@@ -331,4 +331,3 @@ var execScript = function (localScope, script) {
     console.error(err.stack || err);
   });
 })();
-
