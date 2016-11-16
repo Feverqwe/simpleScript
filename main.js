@@ -242,7 +242,7 @@ var commands = {
     var value = getVariableValue(scope, command.value);
     var variable = command.var;
     var varScope = getVariableScope(scope, variable);
-    varScope[variable] += value;
+    varScope[variable] -= value;
     return value;
   },
   return: function (scope, command) {
