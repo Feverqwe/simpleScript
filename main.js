@@ -154,7 +154,8 @@ var getVariableScope = function (scope, variable) {
 
 var getContext = function (context, localScope, forceContext) {
   if (forceContext) {
-    return localScope[forceContext];
+    var fContext = getVariableValue(localScope, forceContext);
+    return localScope[fContext];
   } else {
     return context || scope;
   }
@@ -166,22 +167,22 @@ var commands = {
   },
   call: function (scope, command) {
     var details = getVariableFunction(scope, command.value);
+    var context = getContext(details.context, scope, command.context);
     var fnArgs = buildArgs(scope, command.args);
     var fn = details.value;
     if (typeof fn !== 'function') {
       throw new Error('Call ' + JSON.stringify(command.value) + ' is not a function!');
     }
-    var context = getContext(details.context, scope, command.context);
     return fn.apply(context, fnArgs);
   },
   apply: function (scope, command) {
     var details = getVariableFunction(scope, command.value);
+    var context = getContext(details.context, scope, command.context);
     var fnArgs = getVariableValue(scope, command.args);
     var fn = details.value;
     if (typeof fn !== 'function') {
       throw new Error('Apply ' + JSON.stringify(command.value) + ' is not a function!');
     }
-    var context = getContext(details.context, scope, command.context);
     return fn.apply(context, fnArgs);
   },
   assign: function (scope, command) {
