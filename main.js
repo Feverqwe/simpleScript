@@ -95,48 +95,31 @@ var getVariable = function (scope, variable) {
 
 var buildArgs = function (scope, args) {
   args = args || [];
-  var promise = Promise.resolve();
   var fnArgs = new Array(args.length);
   args.forEach(function (variable, i) {
     if (typeof variable !== 'object') {
       fnArgs[i] = getVariable(scope, variable).value;
     } else {
-      promise = promise.then(function () {
-        return runCommand(scope, variable);
-      }).then(function (value) {
-        fnArgs[i] = value;
-      });
+      fnArgs[i] = runCommand(scope, variable);
     }
   });
-  return promise.then(function () {
-    return fnArgs;
-  })
+  return fnArgs;
 };
 
 var getVariableValue = function (scope, variable) {
-  return Promise.resolve().then(function () {
-    if (typeof variable !== 'object') {
-      return getVariable(scope, variable).value;
-    } else {
-      return runCommand(scope, variable);
-    }
-  });
+  if (typeof variable !== 'object') {
+    return getVariable(scope, variable).value;
+  } else {
+    return runCommand(scope, variable);
+  }
 };
 
 var getVariableFunction = function (localScope, variable) {
-  var promise = Promise.resolve();
   if (typeof variable !== 'object') {
-    promise = promise.then(function () {
-      return getVariable(localScope, variable);
-    });
+    return getVariable(localScope, variable);
   } else {
-    promise = promise.then(function () {
-      return runCommand(localScope, variable);
-    }).then(function (fn) {
-      return {context: scope, value: fn};
-    });
+    return {context: scope, value: runCommand(localScope, variable)};
   }
-  return promise;
 };
 
 var getLocalScope = function (scope, context, args, callArgs) {
@@ -177,46 +160,41 @@ var getContext = function (context, localScope, forceContext) {
 
 var commands = {
   var: function (scope, command) {
-    return getVariableValue(scope, command.value).then(function (value) {
-      scope[command.name] = value;
-    });
+    var value = getVariableValue(scope, command.value);
+    scope[command.name] = value;
   },
   exec: function (scope, command) {
-    return getVariableFunction(scope, command.value).then(function (details) {
-      return buildArgs(scope, command.args).then(function (fnArgs) {
-        var fn = details.value;
-        if (typeof fn !== 'function') {
-          throw new Error('Exec ' + JSON.stringify(command.value) + ' is not a function!');
-        }
-        var context = getContext(details.context, scope, command.context);
-        return fn.apply(context, fnArgs);
-      });
-    });
+    var details = getVariableFunction(scope, command.value);
+    var fnArgs = buildArgs(scope, command.args);
+    var fn = details.value;
+    if (typeof fn !== 'function') {
+      throw new Error('Exec ' + JSON.stringify(command.value) + ' is not a function!');
+    }
+    var context = getContext(details.context, scope, command.context);
+    return fn.apply(context, fnArgs);
   },
   assign: function (scope, command) {
-    return getVariableValue(scope, command.value).then(function (value) {
-      var variable = command.var;
-      var varScope;
-      if (typeof variable !== 'string') {
-        varScope = getVariableScope(scope, variable);
-      } else {
-        var items = variable.split('.');
+    var value = getVariableValue(scope, command.value);
+    var variable = command.var;
+    var varScope;
+    if (typeof variable !== 'string') {
+      varScope = getVariableScope(scope, variable);
+    } else {
+      var items = variable.split('.');
+      variable = items.shift();
+      varScope = getVariableScope(scope, variable);
+      while (items.length) {
+        varScope = varScope[variable];
         variable = items.shift();
-        varScope = getVariableScope(scope, variable);
-        while (items.length) {
-          varScope = varScope[variable];
-          variable = items.shift();
-        }
       }
-      varScope[variable] = value;
-      return value;
-    });
+    }
+    varScope[variable] = value;
+    return value;
   },
   return: function (scope, command) {
-    return getVariableValue(scope, command.value).then(function (value) {
-      scope.return = true;
-      return value;
-    });
+    var value = getVariableValue(scope, command.value);
+    scope.return = true;
+    return value;
   },
   raw: function (scope, command) {
     return command.data;
@@ -234,86 +212,79 @@ var commands = {
     return execScript(scope, command.value);
   },
   if: function (scope, command) {
-    return getVariableValue(scope, command.condition).then(function (result) {
-      if (command.not) {
-        result = !result;
-      }
-      if (result) {
-        return command.then && execScript(scope, command.then);
-      } else {
-        return command.else && execScript(scope, command.else);
-      }
-    });
+    var result = getVariableValue(scope, command.condition);
+    if (command.not) {
+      result = !result;
+    }
+    if (result) {
+      return command.then && execScript(scope, command.then);
+    } else {
+      return command.else && execScript(scope, command.else);
+    }
   },
   throw: function (scope, command) {
-    return getVariableValue(scope, command.value).then(function (value) {
-      return Promise.reject(value);
-    });
+    throw getVariableValue(scope, command.value);
   },
   try: function (scope, command) {
-    return execScript(scope, command.value).catch(function (err) {
+    var result;
+    try {
+      result = execScript(scope, command.value);
+    } catch (err) {
       if (command.catch) {
         var localScope = getLocalScope(scope, this, command.args, [err]);
-        return execScript(localScope, command.catch);
+        result = execScript(localScope, command.catch);
       }
-    });
+    }
+    return result;
   },
   '+': function (scope, command) {
-    return buildArgs(scope, command.args).then(function (args) {
-      return args.reduce(function(sum, current) {
-        return sum + current;
-      }, 0);
-    });
+    var args = buildArgs(scope, command.args);
+    return args.reduce(function(sum, current) {
+      return sum + current;
+    }, 0);
   },
   '-': function (scope, command) {
-    return buildArgs(scope, command.args).then(function (args) {
-      return args.reduce(function(value, current) {
-        return value - current;
-      }, args.shift());
-    });
+    var args = buildArgs(scope, command.args);
+    return args.reduce(function(value, current) {
+      return value - current;
+    }, args.shift());
   },
   '*': function (scope, command) {
-    return buildArgs(scope, command.args).then(function (args) {
-      return args.reduce(function(value, current) {
-        return value / current;
-      }, args.shift());
-    });
+    var args = buildArgs(scope, command.args);
+    return args.reduce(function(value, current) {
+      return value / current;
+    }, args.shift());
   },
   '/': function (scope, command) {
-    return buildArgs(scope, command.args).then(function (args) {
-      return args.reduce(function(value, current) {
-        return value * current;
-      }, args.shift());
-    });
+    var args = buildArgs(scope, command.args);
+    return args.reduce(function(value, current) {
+      return value * current;
+    }, args.shift());
   },
   '==': function (scope, command) {
-    return buildArgs(scope, command.args).then(function (args) {
-      var first = args.shift();
-      return args.every(function (value) {
-        return first == value;
-      });
+    var args = buildArgs(scope, command.args);
+    var first = args.shift();
+    return args.every(function (value) {
+      return first == value;
     });
   },
   '===': function (scope, command) {
-    return buildArgs(scope, command.args).then(function (args) {
-      var first = args.shift();
-      return args.every(function (value) {
-        return first === value;
-      });
+    var args = buildArgs(scope, command.args);
+    var first = args.shift();
+    return args.every(function (value) {
+      return first === value;
     });
   },
   '&&': function (scope, command) {
-    return buildArgs(scope, command.args).then(function (args) {
-      return args.every(function(value) {
-        return !!value;
-      });
+    var args = buildArgs(scope, command.args);
+    return args.every(function(value) {
+      return !!value;
     });
   },
   '||': function (scope, command) {
-    return buildArgs(scope, command.args).then(function (args) {
-      return args.some(function(value) {
-        return !!value;
-      });
+    var args = buildArgs(scope, command.args);
+    return args.some(function(value) {
+      return !!value;
     });
   }
 };
@@ -328,21 +299,20 @@ var execScript = function (localScope, script) {
   var len = script.length;
   var next = function () {
     var command = script[index++];
-    return Promise.resolve().then(function () {
-      return runCommand(localScope, command);
-    }).then(function (result) {
-      if (len === index || localScope.return === true) {
-        return result;
-      } else {
-        return next();
-      }
-    });
+    var result = runCommand(localScope, command);
+    if (len === index || localScope.return === true) {
+      return result;
+    } else {
+      return next();
+    }
   };
   return next();
 };
 
 (function () {
-  return execScript(scope, myScript).then(function () {
+  return Promise.resolve().then(function () {
+    return execScript(scope, myScript);
+  }).then(function () {
     console.log('result', arguments);
   }, function (err) {
     console.error(err.stack || err);
