@@ -5,56 +5,85 @@ var scope = {};
 scope.log = function () {
   console.log.apply(console, arguments);
 };
+scope.console = console;
 
 var myScript = [
   {type: 'var', name: 'myFunction', value: {type: 'function', args: ['var1'], value: [
+    {type: 'var', name: 'test', value: {type: 'raw', data: 'test'}},
+    {type: 'assign', var: 'test', value: {type: 'raw', data: 'test 2'}},
     {type: 'if', condition: {type: 'raw', data: true},
-      then: {type: 'function', value: [
+      then: {type: 'exec', value: {type: 'function', value: [
+        {type: 'exec', value: 'log', args: [{type: 'raw', data: 'if 1 true'}]},
+        {type: 'assign', var: 'myArr', value: {type: 'raw', data: [1]}},
         {type: 'return', value: {type: 'raw', data: true}}
-      ]},
+      ]}},
       else: {type: 'function', value: [
         {type: 'return', value: {type: 'raw', data: true}}
       ]}
     },
-    {type: 'if', condition: {type: 'raw', data: true},
+    {type: 'if', not: true, condition: {type: 'raw', data: true},
       then: {type: 'return', value: {type: 'raw', data: 'abort'}}
     },
-    {type: 'var', name: 'test', value: {type: 'raw', data: 'test'}},
-    {type: 'assign', var: 'test', value: {type: 'raw', data: 'test 2'}},
     {type: 'exec', value: 'log', args: ['var1']},
     {type: 'return', value: 'test'}
   ]}},
   {type: 'var', name: 'myArr', value: {type: 'raw', data: []}},
   {type: 'var', name: 'myObj', value: {type: 'raw', data: {}}},
+  {type: 'assign', var: 'myObj.test', value: {type: 'raw', data: 'test obj item'}},
   {type: 'var', name: 'myUndefined', value: {type: 'raw', data: undefined}},
   {type: 'var', name: 'myNull', value: {type: 'raw', data: null}},
   {type: 'var', name: 'myRegExp', value: {type: 'regexp', pattern: 'test'}},
   {type: 'var', name: 'myVarA', value: {type: 'raw', data: 1}},
   {type: 'var', name: 'myVarB', value: {type: 'raw', data: 2}},
-  {type: 'exec', value: 'log', args: [{type: 'exec', value: 'myFunction', args: [{type: 'raw', data: 'arg1'}]}]},
+  {type: 'exec', value: 'log', args: [
+      {type: 'exec', value: 'myFunction', args: [{type: 'raw', data: 'arg1'}]}
+  ]},
   {type: 'exec', value: 'log', args: ['myArr']},
-  {type: 'exec', value: 'log', args: ['myObj']},
+  {type: 'exec', value: 'log', args: ['myObj', 'myObj.test']},
   {type: 'exec', value: 'log', args: ['myUndefined']},
   {type: 'exec', value: 'log', args: ['myNull']},
-  {type: 'exec', value: 'log', args: ['myRegExp']},
+  {type: 'exec', value: 'log', args: [
+    'myRegExp',
+    {type: 'exec', value: 'myRegExp.test', args: [{type: 'raw', data: 'test'}]}
+  ]},
   {type: 'exec', value: 'log', args: ['myVarA']},
   {type: 'exec', value: 'log', args: ['myVarB']},
+  {type: 'exec', value: 'console.log', args: ['myVarB']},
   {type: 'exec', value: 'log', args: [
-    {type: 'sum', args: ['myVarA', 'myVarB']},
-    {type: 'diff', args: ['myVarA', 'myVarB']}
+    {type: '+', args: ['myVarA', 'myVarB']},
+    {type: '-', args: ['myVarA', 'myVarB']},
+    {type: '*', args: ['myVarA', 'myVarB']},
+    {type: '/', args: ['myVarA', 'myVarB']}
   ]}
 ];
+
+var getVariable = function (scope, variable) {
+  if (typeof variable !== 'string') {
+    return scope[variable];
+  }
+
+  var items = variable.split('.');
+
+  var context = scope;
+  var value = scope[items.shift()];
+  while (items.length) {
+    context = value;
+    value = context[items.shift()];
+  }
+
+  return {value: value, context: context};
+};
 
 var buildArgs = function (scope, args) {
   args = args || [];
   var promise = Promise.resolve();
   var fnArgs = new Array(args.length);
-  args.forEach(function (command, i) {
-    if (typeof command !== 'object') {
-      fnArgs[i] = scope[command];
+  args.forEach(function (variable, i) {
+    if (typeof variable !== 'object') {
+      fnArgs[i] = getVariable(scope, variable).value;
     } else {
       promise = promise.then(function () {
-        return runCommand(scope, command);
+        return runCommand(scope, variable);
       }).then(function (value) {
         fnArgs[i] = value;
       });
@@ -65,14 +94,24 @@ var buildArgs = function (scope, args) {
   })
 };
 
-var getVariableValue = function (scope, command) {
+var getVariableValue = function (scope, variable) {
   var value;
-  if (typeof command !== 'object') {
-    value = scope[command];
+  if (typeof variable !== 'object') {
+    value = getVariable(scope, variable).value;
   } else {
-    value = runCommand(scope, command);
+    value = runCommand(scope, variable);
   }
   return Promise.resolve(value);
+};
+
+var getVariableFunction = function (localScope, variable) {
+  if (typeof variable !== 'object') {
+    return Promise.resolve(getVariable(localScope, variable));
+  } else {
+    return Promise.resolve(runCommand(localScope, variable)).then(function (fn) {
+      return {context: scope, value: fn};
+    });
+  }
 };
 
 var getLocalScope = function (scope, context, args, callArgs) {
@@ -103,11 +142,11 @@ var getVariableScope = function (scope, variable) {
   return scope;
 };
 
-var getContext = function (localScope, context) {
-  if (context) {
-    return localScope[context];
+var getContext = function (context, localScope, forceContext) {
+  if (forceContext) {
+    return localScope[forceContext];
   } else {
-    return scope;
+    return context || scope;
   }
 };
 
@@ -118,9 +157,13 @@ var commands = {
     });
   },
   exec: function (scope, command) {
-    return buildArgs(scope, command.args).then(function (fnArgs) {
-      return getVariableValue(scope, command.value).then(function (fn) {
-        var context = getContext(scope, command.context);
+    return getVariableFunction(scope, command.value).then(function (details) {
+      return buildArgs(scope, command.args).then(function (fnArgs) {
+        var fn = details.value;
+        if (typeof fn !== 'function') {
+          throw new Error('Exec ' + JSON.stringify(command.value) + ' is not a function!');
+        }
+        var context = getContext(details.context, scope, command.context);
         return fn.apply(context, fnArgs);
       });
     });
@@ -128,7 +171,18 @@ var commands = {
   assign: function (scope, command) {
     return getVariableValue(scope, command.value).then(function (value) {
       var variable = command.var;
-      var varScope = getVariableScope(scope, variable);
+      var varScope;
+      if (typeof variable !== 'string') {
+        varScope = getVariableScope(scope, variable);
+      } else {
+        var items = variable.split('.');
+        variable = items.shift();
+        varScope = getVariableScope(scope, variable);
+        while (items.length) {
+          varScope = varScope[variable];
+          variable = items.shift();
+        }
+      }
       varScope[variable] = value;
       return value;
     });
@@ -157,26 +211,54 @@ var commands = {
         result = !result;
       }
       if (result) {
-        return getVariableValue(scope, command.then);
+        return command.then && getVariableValue(scope, command.then);
       } else {
-        return getVariableValue(scope, command.else);
+        return command.else && getVariableValue(scope, command.else);
       }
     });
   },
-  sum: function (scope, command) {
+  '+': function (scope, command) {
     return buildArgs(scope, command.args).then(function (args) {
       return args.reduce(function(sum, current) {
         return sum + current;
       }, 0);
     });
   },
-  diff: function (scope, command) {
+  '-': function (scope, command) {
     return buildArgs(scope, command.args).then(function (args) {
       return args.reduce(function(value, current) {
         return value - current;
       }, args.shift());
     });
   },
+  '*': function (scope, command) {
+    return buildArgs(scope, command.args).then(function (args) {
+      return args.reduce(function(value, current) {
+        return value / current;
+      }, args.shift());
+    });
+  },
+  '/': function (scope, command) {
+    return buildArgs(scope, command.args).then(function (args) {
+      return args.reduce(function(value, current) {
+        return value * current;
+      }, args.shift());
+    });
+  },
+  '&&': function (scope, command) {
+    return buildArgs(scope, command.args).then(function (args) {
+      return args.every(function(value) {
+        return !!value;
+      });
+    });
+  },
+  '||': function (scope, command) {
+    return buildArgs(scope, command.args).then(function (args) {
+      return args.some(function(value) {
+        return !!value;
+      });
+    });
+  }
 };
 
 var runCommand = function (scope, command) {
@@ -205,7 +287,7 @@ var execScript = function (localScope, script) {
   return execScript(scope, myScript).then(function () {
     console.log('result', arguments);
   }, function (err) {
-    console.error('err', err);
+    console.error(err.stack);
   });
 })();
 
