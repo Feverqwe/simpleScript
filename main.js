@@ -76,7 +76,9 @@ var myScript = [
     {type: '&&', args: ['myVarA', 'myVarB']},
     {type: '||', args: ['myVarA', 'myVarB']},
     {type: '==', args: ['myVarA', 'myVarB']},
-    {type: '===', args: ['myVarA', 'myVarB']}
+    {type: '===', args: ['myVarA', 'myVarB']},
+    {type: '>', args: ['myVarA', 'myVarB']},
+    {type: '<', args: ['myVarA', 'myVarB']}
   ]}
 ];
 
