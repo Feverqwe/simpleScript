@@ -269,13 +269,13 @@ var commands = {
   '*': function (scope, command) {
     var args = buildArgs(scope, command.args);
     return args.reduce(function(value, current) {
-      return value / current;
+      return value * current;
     }, args.shift());
   },
   '/': function (scope, command) {
     var args = buildArgs(scope, command.args);
     return args.reduce(function(value, current) {
-      return value * current;
+      return value / current;
     }, args.shift());
   },
   '==': function (scope, command) {
