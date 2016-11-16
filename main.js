@@ -28,9 +28,10 @@ var myScript = [
       then: {type: 'statement', value: [
         {type: 'exec', value: 'console.log', args: [{type: 'raw', data: 'is block statement'}]},
         {type: 'exec', value: 'console.log', args: [
-            {type: 'statement', value: [
-                {type: 'raw', data: 'statement result'}
-            ]}
+          {type: 'statement', value: [
+            {type: 'raw', data: 'statement result'},
+            {type: 'raw', data: 'statement result last'}
+          ]}
         ]}
       ]}
     },
