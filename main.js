@@ -160,8 +160,7 @@ var getContext = function (context, localScope, forceContext) {
 
 var commands = {
   var: function (scope, command) {
-    var value = getVariableValue(scope, command.value);
-    scope[command.name] = value;
+    scope[command.name] = getVariableValue(scope, command.value);
   },
   exec: function (scope, command) {
     var details = getVariableFunction(scope, command.value);
