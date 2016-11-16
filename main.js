@@ -97,11 +97,7 @@ var buildArgs = function (scope, args) {
   args = args || [];
   var fnArgs = new Array(args.length);
   args.forEach(function (variable, i) {
-    if (typeof variable !== 'object') {
-      fnArgs[i] = getVariable(scope, variable).value;
-    } else {
-      fnArgs[i] = runCommand(scope, variable);
-    }
+    fnArgs[i] = getVariableValue(scope, variable);
   });
   return fnArgs;
 };
