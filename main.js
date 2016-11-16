@@ -60,6 +60,13 @@ var myScript = [
   {type: 'exec', value: 'log', args: ['myVarA']},
   {type: 'exec', value: 'log', args: ['myVarB']},
   {type: 'exec', value: 'console.log', args: ['myVarB']},
+  {type: 'try', value: [
+    {type: 'exec', value: 'console.log', args: [{type: 'raw', data: 'in try'}]},
+    {type: 'throw', value: {type: 'raw', data: 'Throw hear!'}},
+    {type: 'exec', value: 'console.log', args: [{type: 'raw', data: 'after throw'}]}
+  ], args: ['err'], catch: [
+    {type: 'exec', value: 'console.error', args: ['err']}
+  ]},
   {type: 'exec', value: 'log', args: [
     {type: '+', args: ['myVarA', 'myVarB']},
     {type: '-', args: ['myVarA', 'myVarB']},
@@ -106,23 +113,29 @@ var buildArgs = function (scope, args) {
 };
 
 var getVariableValue = function (scope, variable) {
-  var value;
-  if (typeof variable !== 'object') {
-    value = getVariable(scope, variable).value;
-  } else {
-    value = runCommand(scope, variable);
-  }
-  return Promise.resolve(value);
+  return Promise.resolve().then(function () {
+    if (typeof variable !== 'object') {
+      return getVariable(scope, variable).value;
+    } else {
+      return runCommand(scope, variable);
+    }
+  });
 };
 
 var getVariableFunction = function (localScope, variable) {
+  var promise = Promise.resolve();
   if (typeof variable !== 'object') {
-    return Promise.resolve(getVariable(localScope, variable));
+    promise = promise.then(function () {
+      return getVariable(localScope, variable);
+    });
   } else {
-    return Promise.resolve(runCommand(localScope, variable)).then(function (fn) {
+    promise = promise.then(function () {
+      return runCommand(localScope, variable);
+    }).then(function (fn) {
       return {context: scope, value: fn};
     });
   }
+  return promise;
 };
 
 var getLocalScope = function (scope, context, args, callArgs) {
@@ -231,6 +244,19 @@ var commands = {
       }
     });
   },
+  throw: function (scope, command) {
+    return getVariableValue(scope, command.value).then(function (value) {
+      return Promise.reject(value);
+    });
+  },
+  try: function (scope, command) {
+    return execScript(scope, command.value).catch(function (err) {
+      if (command.catch) {
+        var localScope = getLocalScope(scope, this, command.args, [err]);
+        return execScript(localScope, command.catch);
+      }
+    });
+  },
   '+': function (scope, command) {
     return buildArgs(scope, command.args).then(function (args) {
       return args.reduce(function(sum, current) {
@@ -285,8 +311,9 @@ var execScript = function (localScope, script) {
   var len = script.length;
   var next = function () {
     var command = script[index++];
-    var result = runCommand(localScope, command);
-    return Promise.resolve(result).then(function (result) {
+    return Promise.resolve().then(function () {
+      return runCommand(localScope, command);
+    }).then(function (result) {
       if (len === index || localScope.return === true) {
         return result;
       } else {
@@ -301,7 +328,7 @@ var execScript = function (localScope, script) {
   return execScript(scope, myScript).then(function () {
     console.log('result', arguments);
   }, function (err) {
-    console.error(err.stack);
+    console.error(err.stack || err);
   });
 })();
 
