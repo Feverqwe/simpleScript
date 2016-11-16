@@ -285,6 +285,22 @@ var commands = {
       }, args.shift());
     });
   },
+  '==': function (scope, command) {
+    return buildArgs(scope, command.args).then(function (args) {
+      var first = args.shift();
+      return args.every(function (value) {
+        return first == value;
+      });
+    });
+  },
+  '===': function (scope, command) {
+    return buildArgs(scope, command.args).then(function (args) {
+      var first = args.shift();
+      return args.every(function (value) {
+        return first === value;
+      });
+    });
+  },
   '&&': function (scope, command) {
     return buildArgs(scope, command.args).then(function (args) {
       return args.every(function(value) {
