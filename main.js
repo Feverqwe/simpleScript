@@ -6,6 +6,7 @@ scope.log = function () {
   console.log.apply(console, arguments);
 };
 scope.console = console;
+scope.RegExp = RegExp;
 
 var myScript = [
   {type: 'var', name: 'myFunction', value: {type: 'function', args: ['var1'], value: [
@@ -47,7 +48,7 @@ var myScript = [
   {type: '=', var: 'myObj.test', value: {type: 'raw', data: 'test obj item'}},
   {type: 'var', name: 'myUndefined', value: {type: 'raw', data: undefined}},
   {type: 'var', name: 'myNull', value: {type: 'raw', data: null}},
-  {type: 'var', name: 'myRegExp', value: {type: 'regexp', pattern: 'test'}},
+  {type: 'var', name: 'myRegExp', value: {type: 'new', value: 'RegExp', args: [{type: 'raw', data: 'test'}]}},
   {type: 'var', name: 'myVarA', value: {type: 'raw', data: 1}},
   {type: 'var', name: 'myVarB', value: {type: 'raw', data: 2}},
   {type: 'call', value: 'log', args: [
@@ -206,6 +207,23 @@ var commands = {
     }
     return fn.apply(context, fnArgs);
   },
+  new: function (scope, command) {
+      var details = getVariableFunction(scope, command.value);
+      var args = buildArgs(scope, command.args);
+      var fn = details.value;
+      if (!args.length) {
+          return new fn();
+      } else
+      if (args.length === 1) {
+          return new fn(args[0]);
+      } else
+      if (args.length === 2) {
+          return new fn(args[0], args[1]);
+      } else
+      if (args.length === 3) {
+          return new fn(args[0], args[1], args[3]);
+      }
+  },
   '=': function (scope, command) {
     var value = getVariableValue(scope, command.value);
     var variable = command.var;
@@ -234,9 +252,6 @@ var commands = {
   },
   raw: function (scope, command) {
     return command.data;
-  },
-  regexp: function (scope, command) {
-    return new RegExp(command.pattern, command.flags);
   },
   function: function (scope, command) {
     return function () {
