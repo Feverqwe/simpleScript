@@ -24,6 +24,16 @@ var myScript = [
     {type: 'if', not: true, condition: {type: 'raw', data: true},
       then: {type: 'return', value: {type: 'raw', data: 'abort'}}
     },
+    {type: 'if', condition: {type: 'raw', data: true},
+      then: {type: 'statement', value: [
+        {type: 'exec', value: 'console.log', args: [{type: 'raw', data: 'is block statement'}]},
+        {type: 'exec', value: 'console.log', args: [
+            {type: 'statement', value: [
+                {type: 'raw', data: 'statement result'}
+            ]}
+        ]}
+      ]}
+    },
     {type: 'exec', value: 'log', args: ['var1']},
     {type: 'return', value: 'test'}
   ]}},
@@ -204,6 +214,9 @@ var commands = {
       var localScope = getLocalScope(scope, this, command.args, [].slice.call(arguments));
       return execScript(localScope, command.value);
     };
+  },
+  statement: function (scope, command) {
+    return execScript(scope, command.value);
   },
   if: function (scope, command) {
     return getVariableValue(scope, command.condition).then(function (result) {
