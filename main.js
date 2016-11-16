@@ -13,7 +13,7 @@ var myScript = [
     {type: 'assign', var: 'test', value: {type: 'raw', data: 'test 2'}},
     {type: 'if', condition: {type: 'raw', data: true},
       then: [
-        {type: 'exec', value: 'log', args: [{type: 'raw', data: 'if 1 true'}]},
+        {type: 'call', value: 'log', args: [{type: 'raw', data: 'if 1 true'}]},
         {type: 'assign', var: 'myArr', value: {type: 'raw', data: [1]}}
       ],
       else: [
@@ -27,8 +27,8 @@ var myScript = [
     },
     {type: 'if', condition: {type: 'raw', data: true},
       then: [
-        {type: 'exec', value: 'console.log', args: [{type: 'raw', data: 'is block statement'}]},
-        {type: 'exec', value: 'console.log', args: [
+        {type: 'call', value: 'console.log', args: [{type: 'raw', data: 'is block statement'}]},
+        {type: 'call', value: 'console.log', args: [
           {type: 'statement', value: [
             {type: 'raw', data: 'statement result'},
             {type: 'raw', data: 'statement result last'}
@@ -36,7 +36,7 @@ var myScript = [
         ]}
       ]
     },
-    {type: 'exec', value: 'log', args: ['var1']},
+    {type: 'call', value: 'log', args: ['var1']},
     {type: 'return', value: 'test'}
   ]}},
   {type: 'var', name: 'myArr', value: {type: 'raw', data: []}},
@@ -47,28 +47,28 @@ var myScript = [
   {type: 'var', name: 'myRegExp', value: {type: 'regexp', pattern: 'test'}},
   {type: 'var', name: 'myVarA', value: {type: 'raw', data: 1}},
   {type: 'var', name: 'myVarB', value: {type: 'raw', data: 2}},
-  {type: 'exec', value: 'log', args: [
-      {type: 'exec', value: 'myFunction', args: [{type: 'raw', data: 'arg1'}]}
+  {type: 'call', value: 'log', args: [
+      {type: 'call', value: 'myFunction', args: [{type: 'raw', data: 'arg1'}]}
   ]},
-  {type: 'exec', value: 'log', args: ['myArr']},
-  {type: 'exec', value: 'log', args: ['myObj', 'myObj.test']},
-  {type: 'exec', value: 'log', args: ['myUndefined']},
-  {type: 'exec', value: 'log', args: ['myNull']},
-  {type: 'exec', value: 'log', args: [
+  {type: 'call', value: 'log', args: ['myArr']},
+  {type: 'call', value: 'log', args: ['myObj', 'myObj.test']},
+  {type: 'call', value: 'log', args: ['myUndefined']},
+  {type: 'call', value: 'log', args: ['myNull']},
+  {type: 'call', value: 'log', args: [
     'myRegExp',
-    {type: 'exec', value: 'myRegExp.test', args: [{type: 'raw', data: 'test'}]}
+    {type: 'call', value: 'myRegExp.test', args: [{type: 'raw', data: 'test'}]}
   ]},
-  {type: 'exec', value: 'log', args: ['myVarA']},
-  {type: 'exec', value: 'log', args: ['myVarB']},
-  {type: 'exec', value: 'console.log', args: ['myVarB']},
+  {type: 'call', value: 'log', args: ['myVarA']},
+  {type: 'call', value: 'log', args: ['myVarB']},
+  {type: 'call', value: 'console.log', args: ['myVarB']},
   {type: 'try', value: [
-    {type: 'exec', value: 'console.log', args: [{type: 'raw', data: 'in try'}]},
+    {type: 'call', value: 'console.log', args: [{type: 'raw', data: 'in try'}]},
     {type: 'throw', value: {type: 'raw', data: 'Throw hear!'}},
-    {type: 'exec', value: 'console.log', args: [{type: 'raw', data: 'after throw'}]}
+    {type: 'call', value: 'console.log', args: [{type: 'raw', data: 'after throw'}]}
   ], args: ['err'], catch: [
-    {type: 'exec', value: 'console.log', args: ['err']}
+    {type: 'call', value: 'console.log', args: ['err']}
   ]},
-  {type: 'exec', value: 'log', args: [
+  {type: 'call', value: 'log', args: [
     {type: '+', args: ['myVarA', 'myVarB']},
     {type: '-', args: ['myVarA', 'myVarB']},
     {type: '*', args: ['myVarA', 'myVarB']},
@@ -162,12 +162,22 @@ var commands = {
   var: function (scope, command) {
     scope[command.name] = getVariableValue(scope, command.value);
   },
-  exec: function (scope, command) {
+  call: function (scope, command) {
     var details = getVariableFunction(scope, command.value);
     var fnArgs = buildArgs(scope, command.args);
     var fn = details.value;
     if (typeof fn !== 'function') {
-      throw new Error('Exec ' + JSON.stringify(command.value) + ' is not a function!');
+      throw new Error('Call ' + JSON.stringify(command.value) + ' is not a function!');
+    }
+    var context = getContext(details.context, scope, command.context);
+    return fn.apply(context, fnArgs);
+  },
+  apply: function (scope, command) {
+    var details = getVariableFunction(scope, command.value);
+    var fnArgs = getVariableValue(scope, command.args);
+    var fn = details.value;
+    if (typeof fn !== 'function') {
+      throw new Error('Apply ' + JSON.stringify(command.value) + ' is not a function!');
     }
     var context = getContext(details.context, scope, command.context);
     return fn.apply(context, fnArgs);
