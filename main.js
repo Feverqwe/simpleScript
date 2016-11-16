@@ -154,8 +154,7 @@ var getVariableScope = function (scope, variable) {
 
 var getContext = function (context, localScope, forceContext) {
   if (forceContext) {
-    var fContext = getVariableValue(localScope, forceContext);
-    return localScope[fContext];
+    return getVariableValue(localScope, forceContext);
   } else {
     return context || scope;
   }
