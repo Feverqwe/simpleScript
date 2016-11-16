@@ -304,7 +304,7 @@ var commands = {
   },
   '<': function (scope, command) {
     var args = buildArgs(scope, command.args);
-    return args[1] > args[0];
+    return args[0] < args[1];
   }
 };
 
