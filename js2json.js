@@ -13,8 +13,11 @@ var getAst = function () {
         var b = 2;
         var r = new RegExp('test');
         var c = 'asdasdasd';
-        c = c.substr(0, 4);
+        c = c.substr(0, 4), c += '123';
         console.log(f(a / b), r.test('test'), c);
+        (function () {
+            console.log('ye!!!')
+        })();
     };
     code = code.toString();
     code = code.substr(code.indexOf('{') + 1);
@@ -110,6 +113,14 @@ var types = {
                 return parseSection(item);
             })
         }
+    },
+    SequenceExpression: function (item) {
+        return {
+            type: 'statement',
+            value: item.expressions.map(function (item) {
+                return parseSection(item);
+            })
+        };
     }
 };
 
