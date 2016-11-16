@@ -295,6 +295,14 @@ var commands = {
     return args.some(function(value) {
       return !!value;
     });
+  },
+  '>': function (scope, command) {
+    var args = buildArgs(scope, command.args);
+    return args[0] > args[1];
+  },
+  '<': function (scope, command) {
+    var args = buildArgs(scope, command.args);
+    return args[1] > args[0];
   }
 };
 
