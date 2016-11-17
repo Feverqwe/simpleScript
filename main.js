@@ -85,11 +85,10 @@ var myScript = [
 ];
 
 (function () {
-  var interpreter = new Interpreter({
-    scope: {
-      console: console,
-      RegExp: RegExp
-    }
+  var interpreter = new Interpreter();
+  interpreter.extendScope({
+    console: console,
+    RegExp: RegExp
   });
   return Promise.resolve().then(function () {
     return interpreter.runScript(myScript);

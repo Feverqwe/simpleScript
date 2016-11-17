@@ -1,25 +1,31 @@
 /**
  * Created by anton on 15.11.16.
  */
-var Interpreter = function (details) {
+
+/**
+ * @constructor
+ */
+var Interpreter = function () {
   "use strict";
   var _this = this;
-  _this.details = details || {};
+  /**
+   * @private
+   */
   _this.scope = {};
-  _this.initScope();
 };
 
-Interpreter.prototype.initScope = function () {
+Interpreter.prototype.extendScope = function (customScope) {
   var _this = this;
-  var details = _this.details;
-  var customScope = details.scope || {};
   var scope = _this.scope;
 
-  Object.keys(customScope).forEach(function (key) {
+  customScope && Object.keys(customScope).forEach(function (key) {
     scope[key] = customScope[key];
   });
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.getVariable = function (scope, variable) {
   var _this = this;
   if (typeof variable !== 'string') {
@@ -38,6 +44,9 @@ Interpreter.prototype.getVariable = function (scope, variable) {
   return {value: value, context: context};
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.getVariableFunction = function (localScope, variable) {
   var _this = this;
   if (typeof variable !== 'object') {
@@ -47,6 +56,9 @@ Interpreter.prototype.getVariableFunction = function (localScope, variable) {
   }
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.getContext = function (context, localScope, forceContext) {
   var _this = this;
   if (forceContext) {
@@ -56,6 +68,9 @@ Interpreter.prototype.getContext = function (context, localScope, forceContext) 
   }
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.buildArgs =function (scope, args) {
   var _this = this;
   args = args || [];
@@ -66,6 +81,9 @@ Interpreter.prototype.buildArgs =function (scope, args) {
   return fnArgs;
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.getVariableValue = function (scope, variable) {
   var _this = this;
   if (typeof variable !== 'object') {
@@ -75,6 +93,9 @@ Interpreter.prototype.getVariableValue = function (scope, variable) {
   }
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.getVariableScope = function (scope, _variable) {
   var _this = this;
   var variable = _variable;
@@ -104,6 +125,9 @@ Interpreter.prototype.getVariableScope = function (scope, _variable) {
   return scope;
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.getLocalScope = function (scope, context, args, callArgs) {
   callArgs = callArgs || [];
   args = args || [];
@@ -120,6 +144,9 @@ Interpreter.prototype.getLocalScope = function (scope, context, args, callArgs) 
   return localScope;
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.commands = {
   var: function (_this, scope, command) {
     scope[command.name] = _this.getVariableValue(scope, command.value);
@@ -285,12 +312,18 @@ Interpreter.prototype.commands = {
   }
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.runCommand = function (scope, command) {
   var _this = this;
   var type = command.type;
   return _this.commands[type](_this, scope, command);
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.execScript = function (localScope, script) {
   var _this = this;
   var index = 0;
