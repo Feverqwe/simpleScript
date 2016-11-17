@@ -3,15 +3,20 @@
  */
 
 /**
+ * @param {Object} customScope
  * @constructor
  */
-var Interpreter = function () {
+var Interpreter = function (customScope) {
   "use strict";
   var _this = this;
   /**
    * @private
    */
   _this.scope = {};
+
+  if (customScope) {
+    _this.extendScope(customScope);
+  }
 };
 
 Interpreter.prototype.extendScope = function (customScope) {

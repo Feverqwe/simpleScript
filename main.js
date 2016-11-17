@@ -85,8 +85,7 @@ var myScript = [
 ];
 
 (function () {
-  var interpreter = new Interpreter();
-  interpreter.extendScope({
+  var interpreter = new Interpreter({
     console: console,
     RegExp: RegExp
   });
