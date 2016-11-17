@@ -7,12 +7,25 @@ var UglifyJS = require("uglify-js");
 
 var getAst = function () {
   var code = function () {
+    var user = { firstName: "Вася" };
+    var admin = { firstName: "Админ" };
 
+    function func() {
+      console.log( this.firstName );
+    }
+
+    user.f = func;
+    admin.g = func;
+
+// this равен объекту перед точкой:
+    user.f(); // Вася
+    admin.g(); // Админ
+    admin['g']();
   };
   code = code.toString();
   code = code.substr(code.indexOf('{') + 1);
   code = code.substr(0, code.lastIndexOf('}'));
-  code = UglifyJS.minify(code, {fromString: true}).code;
+  // code = UglifyJS.minify(code, {fromString: true}).code;
 
   console.log('Code', code);
 
@@ -295,7 +308,10 @@ var types = {
         }
       })
     }
-  }
+  },
+  /*ForInStatement: function (item) {
+
+  }*/
 };
 
 var parseSection = function (item) {

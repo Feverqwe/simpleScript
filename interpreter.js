@@ -52,6 +52,15 @@ Interpreter.prototype.getVariableScope = function (scope, variable) {
   return scope;
 };
 
+Interpreter.prototype.getPropValue = function (scope, variable) {
+  var _this = this;
+  if (typeof variable !== 'object') {
+    return variable;
+  } else {
+    return _this.runCommand(scope, variable);
+  }
+};
+
 Interpreter.prototype.getVariableScopeProp = function (scope, variable) {
   var _this = this;
   if (typeof variable === 'string') {
@@ -63,7 +72,7 @@ Interpreter.prototype.getVariableScopeProp = function (scope, variable) {
   if (variable.type === 'prop') {
     return {
       scope: _this.getVariableValue(scope, variable.value),
-      var: variable.prop
+      var: _this.getPropValue(scope, variable.prop)
     };
   } else {
     return {
@@ -80,6 +89,9 @@ Interpreter.prototype.getVariableFunction = function (localScope, variable) {
   var _this = this;
   if (typeof variable !== 'object') {
     return _this.getVariable(localScope, variable);
+  } else
+  if (variable.type === 'prop') {
+    return _this.getVariable(_this.getVariableValue(localScope, variable.value), _this.getPropValue(localScope, variable.prop));
   } else {
     return {value: _this.runCommand(localScope, variable), context: _this.scope};
   }
@@ -190,7 +202,7 @@ Interpreter.prototype.commands = {
   },
   'prop': function (_this, scope, command) {
     var value = _this.getVariableValue(scope, command.value);
-    var prop = command.prop;
+    var prop = _this.getPropValue(scope, command.prop);
     return value[prop];
   },
   '{}': function (_this, scope, command) {
