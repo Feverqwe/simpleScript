@@ -43,7 +43,7 @@ Interpreter.prototype.getVariableFunction = function (localScope, variable) {
   if (typeof variable !== 'object') {
     return _this.getVariable(localScope, variable);
   } else {
-    return {context: _this.scope, value: _this.runCommand(localScope, variable)};
+    return {value: _this.runCommand(localScope, variable), context: _this.scope};
   }
 };
 
