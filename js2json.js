@@ -7,19 +7,7 @@ var UglifyJS = require("uglify-js");
 
 var getAst = function () {
   var code = function () {
-    var f = function (a) {
-      return a * 2;
-    };
-    var a = 10;
-    a += 2;
-    var b = 2;
-    var r = new RegExp('test');
-    var c = 'asdasdasd';
-    c = c.substr(0, 4), c += '123';
-    console.log(f(a / b), r.test('test'), c);
-    (function () {
-      console.log('ye!!!')
-    })();
+
   };
   code = code.toString();
   code = code.substr(code.indexOf('{') + 1);
@@ -61,10 +49,46 @@ var types = {
       value: parseSection(item.body)
     };
   },
+  FunctionDeclaration: function (item) {
+    var value = {
+      type: 'function',
+      args: paramsToArray(item.params),
+      value: parseSection(item.body)
+    };
+
+    if (item.id.name) {
+      value = {
+        type: 'var',
+        name: item.id.name,
+        value: value
+      };
+    }
+
+    return value;
+  },
+  ForStatement: function (item) {
+    var obj = {
+      type: 'for',
+      value: parseSection(item.body)
+    };
+    if (item.init) {
+      obj.init = parseSection(item.init);
+    }
+    if (item.condition) {
+      obj.condition = parseSection(item.condition);
+    }
+    if (item.update) {
+      obj.update = parseSection(item.update);
+    }
+    return obj;
+  },
   BlockStatement: function (item) {
-    return item.body.map(function (item) {
-      return parseSection(item);
-    });
+    return {
+      type: 'statement',
+      value: item.body.map(function (item) {
+        return parseSection(item);
+      })
+    };
   },
   Literal: function (item) {
     if (item.regex) {
@@ -86,7 +110,11 @@ var types = {
     };
   },
   Identifier: function (item) {
-    return item.name;
+    if (item.name === 'undefined') {
+      return;
+    } else {
+      return item.name;
+    }
   },
   ExpressionStatement: function (item) {
     return parseSection(item.expression);
@@ -104,11 +132,11 @@ var types = {
     return obj;
   },
   MemberExpression: function (item) {
-    var obj = item.object.name;
-    if (item.property) {
-      obj += '.' + item.property.name;
-    }
-    return obj;
+    return {
+      type: 'prop',
+      value: parseSection(item.object),
+      prop: parseSection(item.property)
+    };
   },
   AssignmentExpression: function (item) {
     return {
@@ -135,12 +163,17 @@ var types = {
     };
   },
   IfStatement: function (item) {
-    return {
+    var obj = {
       type: 'if',
-      condition: parseSection(item.test),
-      then: parseSection(item.consequent),
-      else: parseSection(item.alternate)
+      condition: parseSection(item.test)
+    };
+    if (item.consequent) {
+      obj.then = parseSection(item.consequent);
     }
+    if (item.alternate) {
+      obj.else = parseSection(item.alternate);
+    }
+    return obj;
   },
   LogicalExpression: function (item) {
     return {
@@ -156,6 +189,112 @@ var types = {
       else: parseSection(item.alternate)
     }
   },
+  ObjectExpression: function (item) {
+    return {
+      type: '{}',
+      properties: item.properties.map(function (item) {
+        return [
+          parseSection(item.key),
+          parseSection(item.value)
+        ];
+      })
+    }
+  },
+  ArrayExpression: function (item) {
+    return {
+      type: '[]',
+      elements: item.elements.map(function (item) {
+        return parseSection(item);
+      })
+    }
+  },
+  UnaryExpression: function (item) {
+    return {
+      type: item.operator,
+      value: parseSection(item.argument)
+    }
+  },
+  UpdateExpression: function (item) {
+    return {
+      type: item.operator,
+      var: parseSection(item.argument)
+    }
+  },
+  BreakStatement: function (item) {
+    return {
+      type: 'break'
+    }
+  },
+  EmptyStatement: function (item) {
+    return {
+      type: 'statement',
+      value: []
+    }
+  },
+  TryStatement: function (item) {
+    var obj = {
+      type: 'try',
+      value: parseSection(item.block),
+      catch: parseSection(item.handler.body)
+    };
+
+    if (item.handler.param.name) {
+      obj.args = [item.handler.param.name];
+    }
+
+    return obj;
+  },
+  ThrowStatement: function (item) {
+    return {
+      type: 'throw',
+      value: parseSection(item.argument)
+    }
+  },
+  WhileStatement: function (item) {
+    return {
+      type: 'while',
+      condition: parseSection(item.test),
+      value: parseSection(item.body)
+    }
+  },
+  DoWhileStatement: function (item) {
+    return {
+      type: 'do',
+      condition: parseSection(item.test),
+      value: parseSection(item.body)
+    }
+  },
+  ThisExpression: function (item) {
+    return 'this';
+  },
+  SwitchStatement: function (item) {
+    return {
+      type: 'statement',
+      value: item.cases.map(function (_case) {
+        var args;
+        if (_case.test === null) {
+          args = [true, true];
+        } else {
+          args = [
+            parseSection(item.discriminant),
+            parseSection(_case.test)
+          ];
+        }
+        return {
+          type: 'if',
+          condition: {
+            type: '===',
+            args: args
+          },
+          then: {
+            type: 'statement',
+            value: _case.consequent.map(function(item) {
+              return parseSection(item);
+            })
+          }
+        }
+      })
+    }
   }
 };
 
@@ -194,5 +333,6 @@ var astToJson = function (ast) {
   var jsonScript = astToJson(ast);
   console.log('jsonScript', JSON.stringify(jsonScript));
 
-  interpreter.runScript(jsonScript);
+  var result = interpreter.runScript(jsonScript);
+  console.log('result', result);
 })();

@@ -33,20 +33,44 @@ Interpreter.prototype.extendScope = function (customScope) {
  */
 Interpreter.prototype.getVariable = function (scope, variable) {
   var _this = this;
-  if (typeof variable !== 'string') {
-    return {value: scope[variable], context: scope};
+  return {value: scope[variable], context: scope};
+};
+
+/**
+ * @private
+ */
+Interpreter.prototype.getVariableScope = function (scope, variable) {
+  var _this = this;
+
+  while (!scope.hasOwnProperty(variable)) {
+    scope = scope.prototype;
+    if (scope === undefined) {
+      break;
+    }
   }
 
-  var items = variable.split('.');
+  return scope;
+};
 
-  var context = scope;
-  var value = scope[items.shift()];
-  while (items.length) {
-    context = value;
-    value = context[items.shift()];
+Interpreter.prototype.getVariableScopeProp = function (scope, variable) {
+  var _this = this;
+  if (typeof variable === 'string') {
+    return {
+      scope: _this.getVariableScope(scope, variable) || _this.scope,
+      var: variable
+    };
+  } else
+  if (variable.type === 'prop') {
+    return {
+      scope: _this.getVariableValue(scope, variable.value),
+      var: variable.prop
+    };
+  } else {
+    return {
+      noScope: true,
+      var: _this.runCommand(scope, variable)
+    };
   }
-
-  return {value: value, context: context};
 };
 
 /**
@@ -76,7 +100,7 @@ Interpreter.prototype.getContext = function (context, localScope, forceContext) 
 /**
  * @private
  */
-Interpreter.prototype.buildArgs =function (scope, args) {
+Interpreter.prototype.buildArgs = function (scope, args) {
   var _this = this;
   args = args || [];
   var fnArgs = new Array(args.length);
@@ -96,38 +120,6 @@ Interpreter.prototype.getVariableValue = function (scope, variable) {
   } else {
     return _this.runCommand(scope, variable);
   }
-};
-
-/**
- * @private
- */
-Interpreter.prototype.getVariableScope = function (scope, _variable) {
-  var _this = this;
-  var variable = _variable;
-
-  var items = null;
-  if (typeof variable === 'string') {
-    items = variable.split('.');
-    variable = items.shift();
-  }
-
-  var _scope;
-  while (!scope.hasOwnProperty(variable)) {
-    _scope = scope.prototype;
-    if (_scope === undefined) {
-      break;
-    }
-    scope = _scope;
-  }
-
-  if (items) {
-    while (items.length) {
-      scope = scope[variable];
-      variable = items.shift();
-    }
-  }
-
-  return scope;
 };
 
 /**
@@ -196,26 +188,61 @@ Interpreter.prototype.commands = {
       return new fn(args[0], args[1], args[3]);
     }
   },
-  '=': function (_this, scope, command) {
+  'prop': function (_this, scope, command) {
     var value = _this.getVariableValue(scope, command.value);
-    var variable = command.var;
-    var varScope = _this.getVariableScope(scope, variable);
-    varScope[variable] = value;
+    var prop = command.prop;
+    return value[prop];
+  },
+  '{}': function (_this, scope, command) {
+    var obj = {};
+    command.properties.forEach(function (keyValue) {
+      var key = keyValue[0];
+      obj[key] = _this.getVariableValue(scope, keyValue[1]);
+    });
+    return obj;
+  },
+  '[]': function (_this, scope, command) {
+    var arr = new Array(command.elements.length);
+    command.elements.forEach(function (value, i) {
+      arr[i] = _this.getVariableValue(scope, value);
+    });
+    return arr;
+  },
+  '=': function (_this, scope, command) {
+    var scopeProperty = _this.getVariableScopeProp(scope, command.var);
+    var vScope = scopeProperty.scope;
+    var variable = scopeProperty.var;
+    var value = _this.getVariableValue(scope, command.value);
+    if (!scopeProperty.noScope) {
+      vScope[variable] = value
+    }
     return value;
   },
   '+=': function (_this, scope, command) {
+    var scopeProperty = _this.getVariableScopeProp(scope, command.var);
+    var vScope = scopeProperty.scope;
+    var variable = scopeProperty.var;
     var value = _this.getVariableValue(scope, command.value);
-    var variable = command.var;
-    var varScope = _this.getVariableScope(scope, variable);
-    varScope[variable] += value;
-    return value;
+    return vScope[variable] += value
   },
   '-=': function (_this, scope, command) {
+    var scopeProperty = _this.getVariableScopeProp(scope, command.var);
+    var vScope = scopeProperty.scope;
+    var variable = scopeProperty.var;
     var value = _this.getVariableValue(scope, command.value);
-    var variable = command.var;
-    var varScope = _this.getVariableScope(scope, variable);
-    varScope[variable] -= value;
-    return value;
+    return vScope[variable] -= value
+  },
+  '++': function (_this, scope, command) {
+    var scopeProperty = _this.getVariableScopeProp(scope, command.var);
+    var vScope = scopeProperty.scope;
+    var variable = scopeProperty.var;
+    return vScope[variable]++;
+  },
+  '--': function (_this, scope, command) {
+    var scopeProperty = _this.getVariableScopeProp(scope, command.var);
+    var vScope = scopeProperty.scope;
+    var variable = scopeProperty.var;
+    return vScope[variable]--;
   },
   return: function (_this, scope, command) {
     var value = _this.getVariableValue(scope, command.value);
@@ -228,7 +255,10 @@ Interpreter.prototype.commands = {
   function: function (_this, scope, command) {
     return function () {
       var localScope = _this.getLocalScope(scope, this, command.args, [].slice.call(arguments));
-      return _this.execScript(localScope, command.value);
+      var result = _this.runCommand(localScope, command.value);
+      if (localScope.return === true) {
+        return result;
+      }
     };
   },
   statement: function (_this, scope, command) {
@@ -236,14 +266,42 @@ Interpreter.prototype.commands = {
   },
   if: function (_this, scope, command) {
     var result = _this.getVariableValue(scope, command.condition);
-    if (command.not) {
-      result = !result;
-    }
     if (result) {
       return command.then && _this.runCommand(scope, command.then);
     } else {
       return command.else && _this.runCommand(scope, command.else);
     }
+  },
+  break: function (_this, scope, command) {
+    scope.break = true;
+  },
+  for: function (_this, scope, command) {
+    command.init && _this.runCommand(scope, command.init);
+    for (;_this.getVariableValue(scope, command.condition);_this.getVariableValue(scope, command.update)) {
+      _this.runCommand(scope, command.value);
+      if (scope.break == true) {
+        delete scope.break;
+        break;
+      }
+    }
+  },
+  while: function (_this, scope, command) {
+    while (_this.getVariableValue(scope, command.condition)) {
+      _this.runCommand(scope, command.value);
+      if (scope.break == true) {
+        delete scope.break;
+        break;
+      }
+    }
+  },
+  do: function (_this, scope, command) {
+    do {
+      _this.runCommand(scope, command.value);
+      if (scope.break == true) {
+        delete scope.break;
+        break;
+      }
+    } while (_this.getVariableValue(scope, command.condition));
   },
   throw: function (_this, scope, command) {
     throw _this.getVariableValue(scope, command.value);
@@ -251,64 +309,46 @@ Interpreter.prototype.commands = {
   try: function (_this, scope, command) {
     var result;
     try {
-      result = _this.execScript(scope, command.value);
+      result = _this.runCommand(scope, command.value);
     } catch (err) {
       if (command.catch) {
         var localScope = _this.getLocalScope(scope, this, command.args, [err]);
-        result = _this.execScript(localScope, command.catch);
+        result = _this.runCommand(localScope, command.catch);
       }
     }
     return result;
   },
   '+': function (_this, scope, command) {
     var args = _this.buildArgs(scope, command.args);
-    return args.reduce(function(sum, current) {
-      return sum + current;
-    }, 0);
+    return args[0] + args[1];
   },
   '-': function (_this, scope, command) {
     var args = _this.buildArgs(scope, command.args);
-    return args.reduce(function(value, current) {
-      return value - current;
-    }, args.shift());
+    return args[0] - args[1];
   },
   '*': function (_this, scope, command) {
     var args = _this.buildArgs(scope, command.args);
-    return args.reduce(function(value, current) {
-      return value * current;
-    }, args.shift());
+    return args[0] * args[1];
   },
   '/': function (_this, scope, command) {
     var args = _this.buildArgs(scope, command.args);
-    return args.reduce(function(value, current) {
-      return value / current;
-    }, args.shift());
+    return args[0] / args[1];
   },
   '==': function (_this, scope, command) {
     var args = _this.buildArgs(scope, command.args);
-    var first = args.shift();
-    return args.every(function (value) {
-      return first == value;
-    });
+    return args[0] == args[1];
   },
   '===': function (_this, scope, command) {
     var args = _this.buildArgs(scope, command.args);
-    var first = args.shift();
-    return args.every(function (value) {
-      return first === value;
-    });
+    return args[0] === args[1];
   },
   '&&': function (_this, scope, command) {
     var args = _this.buildArgs(scope, command.args);
-    return args.every(function(value) {
-      return !!value;
-    });
+    return args[0] && args[1];
   },
   '||': function (_this, scope, command) {
     var args = _this.buildArgs(scope, command.args);
-    return args.some(function(value) {
-      return !!value;
-    });
+    return args[0] || args[1];
   },
   '>': function (_this, scope, command) {
     var args = _this.buildArgs(scope, command.args);
@@ -317,6 +357,18 @@ Interpreter.prototype.commands = {
   '<': function (_this, scope, command) {
     var args = _this.buildArgs(scope, command.args);
     return args[0] < args[1];
+  },
+  'void': function (_this, scope, command) {
+    var value = _this.getVariableValue(scope, command.value);
+    return void value;
+  },
+  '!': function (_this, scope, command) {
+    var value = _this.getVariableValue(scope, command.value);
+    return !value;
+  },
+  'typeof': function (_this, scope, command) {
+    var value = _this.getVariableValue(scope, command.value);
+    return typeof value;
   }
 };
 
@@ -339,7 +391,7 @@ Interpreter.prototype.execScript = function (localScope, script) {
   var next = function () {
     var command = script[index++];
     var result = _this.runCommand(localScope, command);
-    if (len === index || localScope.return === true) {
+    if (len === index || localScope.return === true || localScope.break === true) {
       return result;
     } else {
       return next();
