@@ -180,6 +180,9 @@ Interpreter.prototype.commands = {
     var details = _this.getVariableFunction(scope, command.value);
     var args = _this.buildArgs(scope, command.args);
     var fn = details.value;
+    if (typeof fn !== 'function') {
+      throw new Error('new Function ' + JSON.stringify(command.value) + ' is not a function!');
+    }
     if (!args.length) {
       return new fn();
     } else
@@ -237,9 +240,9 @@ Interpreter.prototype.commands = {
       result = !result;
     }
     if (result) {
-      return command.then && _this.execScript(scope, command.then);
+      return command.then && _this.runCommand(scope, command.then);
     } else {
-      return command.else && _this.execScript(scope, command.else);
+      return command.else && _this.runCommand(scope, command.else);
     }
   },
   throw: function (_this, scope, command) {

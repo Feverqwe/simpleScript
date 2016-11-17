@@ -3,6 +3,7 @@
  */
 var acorn = require('acorn');
 var Interpreter = require('./interpreter');
+var UglifyJS = require("uglify-js");
 
 var getAst = function () {
   var code = function () {
@@ -23,7 +24,9 @@ var getAst = function () {
   code = code.toString();
   code = code.substr(code.indexOf('{') + 1);
   code = code.substr(0, code.lastIndexOf('}'));
-  console.log('code', code);
+  code = UglifyJS.minify(code, {fromString: true}).code;
+
+  console.log('Code', code);
 
   return acorn.parse(code);
 };
@@ -36,11 +39,12 @@ var paramsToArray = function (params) {
 
 var types = {
   VariableDeclaration: function (item) {
-    if (item.declarations.length > 1) {
-      console.error('More one decloration!', item);
-      throw 'Error! ore one decloration!'
-    }
-    return parseSection(item.declarations[0]);
+    return {
+      type: 'statement',
+      value: item.declarations.map(function (item) {
+        return parseSection(item);
+      })
+    };
   },
   VariableDeclarator: function (item) {
     var id = item.id;
@@ -63,7 +67,14 @@ var types = {
     });
   },
   Literal: function (item) {
-    return {type: 'raw', data: item.value};
+    if (item.regex) {
+      return {type: 'new', value: 'RegExp', args: [
+        {type: 'raw', data: item.regex.pattern},
+        {type: 'raw', data: item.regex.flags}
+      ]};
+    } else {
+      return {type: 'raw', data: item.value};
+    }
   },
   ReturnStatement: function (item) {
     return {type: 'return', value: parseSection(item.argument)};
@@ -122,19 +133,45 @@ var types = {
         return parseSection(item);
       })
     };
+  },
+  IfStatement: function (item) {
+    return {
+      type: 'if',
+      condition: parseSection(item.test),
+      then: parseSection(item.consequent),
+      else: parseSection(item.alternate)
+    }
+  },
+  LogicalExpression: function (item) {
+    return {
+      type: item.operator,
+      args: [parseSection(item.left), parseSection(item.right)]
+    }
+  },
+  ConditionalExpression: function (item) {
+    return {
+      type: 'if',
+      condition: parseSection(item.test),
+      then: parseSection(item.consequent),
+      else: parseSection(item.alternate)
+    }
+  },
   }
 };
 
 var parseSection = function (item) {
-  if (item === undefined) {
-    console.trace(item)
+  console.log('parseSection', item.type);
+
+  try {
+    var parser = types[item.type];
+    if (!parser) {
+      throw new Error('Section is not found! ' + item.type);
+    }
+  } catch(e) {
+    console.log('Error statement', JSON.stringify(item));
+    throw new Error('Section parse error! ' + item.type);
   }
-  var parser = types[item.type];
-  if (!parser) {
-    console.error('Section is not found', item.type);
-    throw new Error("Section is not found!");
-  }
-  console.log('parse', item.type);
+
   return parser(item);
 };
 
@@ -146,13 +183,16 @@ var astToJson = function (ast) {
 
 (function () {
   var ast = getAst();
-  var interpreter = new Interpreter();
+  var interpreter = new Interpreter({
+    RegExp: RegExp,
+    console: console
+  });
 
   ast = JSON.parse(JSON.stringify(ast));
   console.log('ast', JSON.stringify(ast));
 
-  astToJson(ast);
-  console.log('json', JSON.stringify(statement));
+  var jsonScript = astToJson(ast);
+  console.log('jsonScript', JSON.stringify(jsonScript));
 
-  interpreter.runScript(statement);
+  interpreter.runScript(jsonScript);
 })();

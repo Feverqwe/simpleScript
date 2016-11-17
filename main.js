@@ -8,21 +8,21 @@ var myScript = [
     {type: 'var', name: 'test', value: {type: 'raw', data: 'test'}},
     {type: '=', var: 'test', value: {type: 'raw', data: 'test 2'}},
     {type: 'if', condition: {type: 'raw', data: true},
-      then: [
+      then: {type: 'statement', value: [
         {type: 'call', value: 'console.log', args: [{type: 'raw', data: 'if 1 true'}]},
         {type: '=', var: 'myArr', value: {type: 'raw', data: [1]}}
-      ],
-      else: [
+      ]},
+      else: {type: 'statement', value: [
         {type: 'return', value: {type: 'raw', data: false}}
-      ]
+      ]}
     },
     {type: 'if', not: true, condition: {type: 'raw', data: true},
-      then: [
+      then: {type: 'statement', value: [
         {type: 'return', value: {type: 'raw', data: 'abort'}}
-      ]
+      ]}
     },
     {type: 'if', condition: {type: 'raw', data: true},
-      then: [
+      then: {type: 'statement', value: [
         {type: 'call', value: 'console.log', args: [{type: 'raw', data: 'is block statement'}]},
         {type: 'call', value: 'console.log', args: [
           {type: 'statement', value: [
@@ -30,7 +30,7 @@ var myScript = [
             {type: 'raw', data: 'statement result last'}
           ]}
         ]}
-      ]
+      ]}
     },
     {type: 'call', value: 'console.log', args: ['var1']},
     {type: 'return', value: 'test'}
