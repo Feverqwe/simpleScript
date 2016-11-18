@@ -200,6 +200,18 @@ Interpreter.prototype.commands = {
       return object[property] = value;
     }
   },
+  '%=': function (_this, scope, command) {
+    var objProp = _this.getObjectProperty(scope, command.left);
+    var noObject = objProp.noObject;
+    var object = objProp.object;
+    var property = objProp.property;
+
+    if (noObject) {
+      throw "Error! Left is not object!";
+    } else {
+      return object[property] %= _this.getVariableValue(scope, command.right);
+    }
+  },
   '+=': function (_this, scope, command) {
     var objProp = _this.getObjectProperty(scope, command.left);
     var noObject = objProp.noObject;
@@ -359,6 +371,14 @@ Interpreter.prototype.commands = {
   '<': function (_this, scope, command) {
     var values = _this.buildArgs(scope, command.values);
     return values[0] < values[1];
+  },
+  '>=': function (_this, scope, command) {
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] >= values[1];
+  },
+  '<=': function (_this, scope, command) {
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] <= values[1];
   },
   'void': function (_this, scope, command) {
     var value = _this.getVariableValue(scope, command.value);
