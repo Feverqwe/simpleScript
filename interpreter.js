@@ -153,9 +153,10 @@ Interpreter.prototype.commands = {
 
     if (command.isNew) {
       if (noObject) {
-        return new (fn.bind.apply(fn, args.unshift(_this.scope)))();
+        return new (Function.prototype.bind.apply(fn, args.unshift(_this.scope)));
       } else {
-        return new (fn.bind.apply(fn, args))();
+        args.unshift(fn);
+        return new (Function.prototype.bind.apply(fn, args));
       }
     } else {
       if (noObject) {
@@ -346,12 +347,10 @@ Interpreter.prototype.commands = {
     return values[0] === values[1];
   },
   '&&': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] && values[1];
+    return _this.getVariableValue(scope, command.values[0]) && _this.getVariableValue(scope, command.values[1]);
   },
   '||': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] || values[1];
+    return _this.getVariableValue(scope, command.values[0]) || _this.getVariableValue(scope, command.values[1]);
   },
   '>': function (_this, scope, command) {
     var values = _this.buildArgs(scope, command.values);
@@ -396,8 +395,13 @@ Interpreter.prototype.execScript = function (localScope, script) {
   }
 
   var next = function () {
+    var result;
     var command = script[index++];
-    var result = _this.runCommand(localScope, command);
+    if (typeof command === 'string') {
+      result = _this.getVariableValue(localScope, command);
+    } else {
+      result = _this.runCommand(localScope, command);
+    }
     if (len === index || localScope.return === true || localScope.break === true) {
       return result;
     } else {
