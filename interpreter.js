@@ -9,6 +9,9 @@
 var Interpreter = function (customScope) {
   "use strict";
   var _this = this;
+
+  _this.initOperators();
+
   /**
    * @private
    */
@@ -17,6 +20,92 @@ var Interpreter = function (customScope) {
   if (customScope) {
     _this.extendScope(customScope);
   }
+};
+
+/**
+ * @private
+ */
+Interpreter.prototype.initOperators = function () {
+  var _this = this;
+  var commands = _this.commands;
+  var dbl_operators = {
+    '+': function (a,b) {return a+b},
+    '-': function (a,b) {return a-b},
+    '*': function (a,b) {return a*b},
+    '/': function (a,b) {return a/b},
+    '%': function (a,b) {return a%b},
+    '>': function (a,b) {return a>b},
+    '>=': function (a,b) {return a>=b},
+    '<': function (a,b) {return a<b},
+    '<=': function (a,b) {return a<=b},
+    '==': function (a,b) {return a==b},
+    '===': function (a,b) {return a===b},
+    '!=': function (a,b) {return a!=b},
+    '!==': function (a,b) {return a!==b},
+
+    '&': function (a,b) {return a&b},
+    '|': function (a,b) {return a|b},
+    '^': function (a,b) {return a^b},
+    '<<': function (a,b) {return a<<b},
+    '>>': function (a,b) {return a>>b},
+    '>>>': function (a,b) {return a>>>b}
+  };
+  Object.keys(dbl_operators).forEach(function (key) {
+    var operator = dbl_operators[key];
+    commands[key] = function (_this, scope, command) {
+      var values;
+      if (command.value !== undefined) {
+        values = [0, _this.getVariableValue(scope, command.value)];
+      } else {
+        values = _this.buildArgs(scope, command.values);
+      }
+      return operator(values[0], values[1]);
+    };
+  });
+  var one_operators = {
+    'typeof': function (a) {return typeof a},
+    'void': function (a) {return void a},
+    '!': function (a) {return !a},
+    '~': function (a) {return ~a}
+  };
+  Object.keys(one_operators).forEach(function (key) {
+    var operator = one_operators[key];
+    commands[key] = function (_this, scope, command) {
+      var value = _this.getVariableValue(scope, command.value);
+      return operator(value);
+    };
+  });
+  var assign_operators = {
+    '+=': function (o,p,s,c) {return o[p]+=_this.getVariableValue(s,c)},
+    '-=': function (o,p,s,c) {return o[p]-=_this.getVariableValue(s,c)},
+    '%=': function (o,p,s,c) {return o[p]%=_this.getVariableValue(s,c)}
+  };
+  Object.keys(assign_operators).forEach(function (key) {
+    var operator = assign_operators[key];
+    commands[key] = function (_this, scope, command) {
+      var objProp = _this.getObjectProperty(scope, command.left);
+      if (objProp.noObject) {
+        throw "Error! Left is not object!";
+      } else {
+        return operator(objProp.object, objProp.property, scope, command.right);
+      }
+    };
+  });
+  var inc_operators = {
+    '++': function (o,p) {return o[p]++},
+    '--': function (o,p) {return o[p]--}
+  };
+  Object.keys(inc_operators).forEach(function (key) {
+    var operator = inc_operators[key];
+    commands[key] = function (_this, scope, command) {
+      var objProp = _this.getObjectProperty(scope, command.left);
+      if (objProp.noObject) {
+        throw "Error! Left is not object!";
+      } else {
+        return operator(objProp.object, objProp.property);
+      }
+    };
+  });
 };
 
 Interpreter.prototype.extendScope = function (customScope) {
@@ -201,70 +290,16 @@ Interpreter.prototype.commands = {
       return object[property] = value;
     }
   },
-  '%=': function (_this, scope, command) {
-    var objProp = _this.getObjectProperty(scope, command.left);
-    var noObject = objProp.noObject;
-    var object = objProp.object;
-    var property = objProp.property;
-
-    if (noObject) {
-      throw "Error! Left is not object!";
-    } else {
-      return object[property] %= _this.getVariableValue(scope, command.right);
-    }
-  },
-  '+=': function (_this, scope, command) {
-    var objProp = _this.getObjectProperty(scope, command.left);
-    var noObject = objProp.noObject;
-    var object = objProp.object;
-    var property = objProp.property;
-
-    if (noObject) {
-      throw "Error! Left is not object!";
-    } else {
-      return object[property] += _this.getVariableValue(scope, command.right);
-    }
-  },
-  '-=': function (_this, scope, command) {
-    var objProp = _this.getObjectProperty(scope, command.left);
-    var noObject = objProp.noObject;
-    var object = objProp.object;
-    var property = objProp.property;
-
-    if (noObject) {
-      throw "Error! Left is not object!";
-    } else {
-      return object[property] -= _this.getVariableValue(scope, command.right);
-    }
-  },
-  '++': function (_this, scope, command) {
-    var objProp = _this.getObjectProperty(scope, command.left);
-    var noObject = objProp.noObject;
-    var object = objProp.object;
-    var property = objProp.property;
-
-    if (noObject) {
-      throw "Error! Left is not object!";
-    } else {
-      return object[property]++;
-    }
-  },
-  '--': function (_this, scope, command) {
-    var objProp = _this.getObjectProperty(scope, command.left);
-    var noObject = objProp.noObject;
-    var object = objProp.object;
-    var property = objProp.property;
-
-    if (noObject) {
-      throw "Error! Left is not object!";
-    } else {
-      return object[property]--;
-    }
-  },
   return: function (_this, scope, command) {
     var value = _this.getVariableValue(scope, command.value);
     scope.return = true;
     return value;
+  },
+  break: function (_this, scope, command) {
+    scope.break = true;
+  },
+  continue: function (_this, scope, command) {
+    scope.continue = true;
   },
   raw: function (_this, scope, command) {
     return command.data;
@@ -288,12 +323,6 @@ Interpreter.prototype.commands = {
     } else {
       return command.else && _this.runCommand(scope, command.else);
     }
-  },
-  break: function (_this, scope, command) {
-    scope.break = true;
-  },
-  continue: function (_this, scope, command) {
-    scope.continue = true;
   },
   for: function (_this, scope, command) {
     command.init && _this.runCommand(scope, command.init);
@@ -341,63 +370,11 @@ Interpreter.prototype.commands = {
     }
     return result;
   },
-  '+': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] + values[1];
-  },
-  '-': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] - values[1];
-  },
-  '*': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] * values[1];
-  },
-  '/': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] / values[1];
-  },
-  '==': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] == values[1];
-  },
-  '===': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] === values[1];
-  },
   '&&': function (_this, scope, command) {
     return _this.getVariableValue(scope, command.values[0]) && _this.getVariableValue(scope, command.values[1]);
   },
   '||': function (_this, scope, command) {
     return _this.getVariableValue(scope, command.values[0]) || _this.getVariableValue(scope, command.values[1]);
-  },
-  '>': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] > values[1];
-  },
-  '<': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] < values[1];
-  },
-  '>=': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] >= values[1];
-  },
-  '<=': function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return values[0] <= values[1];
-  },
-  'void': function (_this, scope, command) {
-    var value = _this.getVariableValue(scope, command.value);
-    return void value;
-  },
-  '!': function (_this, scope, command) {
-    var value = _this.getVariableValue(scope, command.value);
-    return !value;
-  },
-  'typeof': function (_this, scope, command) {
-    var value = _this.getVariableValue(scope, command.value);
-    return typeof value;
   }
 };
 
