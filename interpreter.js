@@ -78,7 +78,15 @@ Interpreter.prototype.initOperators = function () {
   var assign_operators = {
     '+=': function (o,p,s,c) {return o[p]+=_this.getVariableValue(s,c)},
     '-=': function (o,p,s,c) {return o[p]-=_this.getVariableValue(s,c)},
-    '%=': function (o,p,s,c) {return o[p]%=_this.getVariableValue(s,c)}
+    '*=': function (o,p,s,c) {return o[p]*=_this.getVariableValue(s,c)},
+    '/=': function (o,p,s,c) {return o[p]/=_this.getVariableValue(s,c)},
+    '%=': function (o,p,s,c) {return o[p]%=_this.getVariableValue(s,c)},
+    '<<=': function (o,p,s,c) {return o[p]<<=_this.getVariableValue(s,c)},
+    '>>=': function (o,p,s,c) {return o[p]>>=_this.getVariableValue(s,c)},
+    '>>>=': function (o,p,s,c) {return o[p]>>>=_this.getVariableValue(s,c)},
+    '&=': function (o,p,s,c) {return o[p]&=_this.getVariableValue(s,c)},
+    '^=': function (o,p,s,c) {return o[p]^=_this.getVariableValue(s,c)},
+    '|=': function (o,p,s,c) {return o[p]|=_this.getVariableValue(s,c)}
   };
   Object.keys(assign_operators).forEach(function (key) {
     var operator = assign_operators[key];
@@ -278,17 +286,20 @@ Interpreter.prototype.commands = {
   },
   '=': function (_this, scope, command) {
     var objProp = _this.getObjectProperty(scope, command.left);
-    var noObject = objProp.noObject;
-    var object = objProp.object;
-    var property = objProp.property;
-
     var value = _this.getVariableValue(scope, command.right);
-
-    if (noObject) {
+    if (objProp.noObject) {
       return value;
     } else {
-      return object[property] = value;
+      return objProp.object[objProp.property] = value;
     }
+  },
+  delete: function (_this, scope, command) {
+    var objProp = _this.getObjectProperty(scope, command.value);
+    return delete objProp.object[objProp.property];
+  },
+  instanceof: function (_this, scope, command) {
+    var values = _this.buildArgs(scope, command.values);
+    return (values[0] instanceof values[1]);
   },
   return: function (_this, scope, command) {
     var value = _this.getVariableValue(scope, command.value);
