@@ -210,7 +210,7 @@ Interpreter.prototype.getObjectProperty = function (scope, variable) {
   } else
   if (variable.type === 'member') {
     object = _this.getVariableValue(scope, variable.object);
-    property = _this.getVariableValue(scope, variable.property);
+    property = _this.getPropValue(scope, variable.property);
   } else {
     noObject = true;
   }
@@ -226,7 +226,7 @@ Interpreter.prototype.commands = {
     var item, key;
     for (var i = 0, len = command.values.length; i < len; i++) {
       item = command.values[i];
-      key = _this.getVariableValue(scope, item.key);
+      key = _this.getPropValue(scope, item.key);
       scope[key] = item.value && _this.getVariableValue(scope, item.value);
     }
   },
@@ -245,7 +245,7 @@ Interpreter.prototype.commands = {
     var args = _this.buildArgs(scope, command.params);
 
     if (typeof fn !== 'function') {
-      throw new Error('Call ' + JSON.stringify(command.callee) + ' is not a function!');
+      throw new Error('Call ' + JSON.stringify(callee) + ' is not a function!');
     }
 
     if (command.isNew) {
@@ -266,13 +266,13 @@ Interpreter.prototype.commands = {
   },
   member: function (_this, scope, command) {
     var object = _this.getVariableValue(scope, command.object);
-    var property = _this.getVariableValue(scope, command.property);
+    var property = _this.getPropValue(scope, command.property);
     return object[property];
   },
   '{}': function (_this, scope, command) {
     var obj = {};
     command.properties.forEach(function (keyValue) {
-      var key = _this.getVariableValue(scope, keyValue[0]);
+      var key = _this.getPropValue(scope, keyValue[0]);
       obj[key] = _this.getVariableValue(scope, keyValue[1]);
     });
     return obj;
