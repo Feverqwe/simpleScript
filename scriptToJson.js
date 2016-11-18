@@ -12,51 +12,45 @@ var types = {
           throw new Error('Unsupported type!');
         }
 
-        var key = parseSection(item.id, item);
+        var key = parseSection(item.id);
         var value;
         if (item.init) {
-          value = parseSection(item.init, item);
+          value = parseSection(item.init);
         }
         return {key: key, value: value};
       })
     };
   },
-  Identifier: function (item, parent) {
-    var value = item.name;
+  Identifier: function (item) {
     if (item.name === 'undefined') {
-      value = undefined;
-    }
-
-    if (parent.object !== item && !parent.computed) {
-      return {type: 'raw', data: value};
+      return;
     } else {
-      return value;
+      return item.name;
     }
   },
   FunctionExpression: function (item) {
     return {
       type: 'function',
-      params: item.params.map(function (_item) {
-        return parseSection(_item, item);
+      params: item.params.map(function (item) {
+        return parseSection(item);
       }),
-      body: parseSection(item.body, item)
+      body: parseSection(item.body)
     };
   },
   FunctionDeclaration: function (item) {
     var value = {
       type: 'function',
-      params: item.params.map(function (_item) {
-        return parseSection(_item, item);
+      params: item.params.map(function (item) {
+        return parseSection(item);
       }),
-      body: parseSection(item.body, item)
+      body: parseSection(item.body)
     };
 
-    if (item.id) {
+    if (item.id.name) {
       value = {
         type: 'var',
-        values: [
-          {key: parseSection(item.id, item), value: value}
-        ]
+        name: item.id.name,
+        value: value
       };
     }
 
@@ -65,24 +59,24 @@ var types = {
   ForStatement: function (item) {
     var obj = {
       type: 'for',
-      body: parseSection(item.body, item)
+      body: parseSection(item.body)
     };
     if (item.init) {
-      obj.init = parseSection(item.init, item);
+      obj.init = parseSection(item.init);
     }
     if (item.test) {
-      obj.test = parseSection(item.test, item);
+      obj.test = parseSection(item.test);
     }
     if (item.update) {
-      obj.update = parseSection(item.update, item);
+      obj.update = parseSection(item.update);
     }
     return obj;
   },
   BlockStatement: function (item) {
     return {
       type: 'statement',
-      body: item.body.map(function (_item) {
-        return parseSection(_item, item);
+      body: item.body.map(function (item) {
+        return parseSection(item);
       })
     };
   },
@@ -97,83 +91,83 @@ var types = {
     }
   },
   ReturnStatement: function (item) {
-    return {type: 'return', value: parseSection(item.argument, item)};
+    return {type: 'return', value: parseSection(item.argument)};
   },
   BinaryExpression: function (item) {
     return {
       type: item.operator,
-      values: [parseSection(item.left, item), parseSection(item.right, item)]
+      values: [parseSection(item.left), parseSection(item.right)]
     };
   },
   ExpressionStatement: function (item) {
-    return parseSection(item.expression, item);
+    return parseSection(item.expression);
   },
   CallExpression: function (item) {
     return {
       type: 'call',
-      callee: parseSection(item.callee, item),
-      params: item.arguments.map(function (_item) {
-        return parseSection(_item, item);
+      callee: parseSection(item.callee),
+      params: item.arguments.map(function (item) {
+        return parseSection(item);
       })
     };
   },
   MemberExpression: function (item) {
     return {
       type: 'member',
-      object: parseSection(item.object, item),
-      property: parseSection(item.property, item)
+      object: parseSection(item.object),
+      property: parseSection(item.property)
     };
   },
   NewExpression: function (item) {
     return {
       type: 'call',
       isNew: true,
-      callee: parseSection(item.callee, item),
-      params: item.arguments.map(function (_item) {
-        return parseSection(_item, item);
+      callee: parseSection(item.callee),
+      params: item.arguments.map(function (item) {
+        return parseSection(item);
       })
     }
   },
   AssignmentExpression: function (item) {
     return {
       type: item.operator,
-      left: parseSection(item.left, item),
-      right: parseSection(item.right, item)
+      left: parseSection(item.left),
+      right: parseSection(item.right)
     };
   },
   SequenceExpression: function (item) {
     return {
       type: 'statement',
-      body: item.expressions.map(function (_item) {
-        return parseSection(_item, item);
+      body: item.expressions.map(function (item) {
+        return parseSection(item);
       })
     };
   },
   IfStatement: function (item) {
     var obj = {
       type: 'if',
-      test: parseSection(item.test, item)
+      test: parseSection(item.test)
     };
     if (item.consequent) {
-      obj.then = parseSection(item.consequent, item);
+      obj.then = parseSection(item.consequent);
     }
     if (item.alternate) {
-      obj.else = parseSection(item.alternate, item);
+      obj.else = parseSection(item.alternate);
     }
     return obj;
   },
   LogicalExpression: function (item) {
     return {
       type: item.operator,
-      values: [parseSection(item.left, item), parseSection(item.right, item)]
+      values: [parseSection(item.left), parseSection(item.right)]
     }
   },
   ConditionalExpression: function (item) {
     return {
       type: 'if',
-      test: parseSection(item.test, item),
-      then: parseSection(item.consequent, item),
-      else: parseSection(item.alternate, item)
+      test: parseSection(item.test),
+      then: parseSection(item.consequent),
+      else: parseSection(item.alternate)
     }
   },
   ObjectExpression: function (item) {
@@ -181,8 +175,8 @@ var types = {
       type: '{}',
       properties: item.properties.map(function (item) {
         return [
-          parseSection(item.key, item),
-          parseSection(item.value, item)
+          parseSection(item.key),
+          parseSection(item.value)
         ];
       })
     }
@@ -190,21 +184,21 @@ var types = {
   ArrayExpression: function (item) {
     return {
       type: '[]',
-      values: item.elements.map(function (_item) {
-        return parseSection(_item, item);
+      values: item.elements.map(function (item) {
+        return parseSection(item);
       })
     }
   },
   UnaryExpression: function (item) {
     return {
       type: item.operator,
-      value: parseSection(item.argument, item)
+      value: parseSection(item.argument)
     }
   },
   UpdateExpression: function (item) {
     return {
       type: item.operator,
-      left: parseSection(item.argument, item)
+      left: parseSection(item.argument)
     }
   },
   BreakStatement: function (item) {
@@ -221,8 +215,8 @@ var types = {
   TryStatement: function (item) {
     var obj = {
       type: 'try',
-      block: parseSection(item.block, item),
-      catch: parseSection(item.handler.body, item.handler)
+      block: parseSection(item.block),
+      catch: parseSection(item.handler.body)
     };
 
     obj.params = [item.handler.param.name];
@@ -232,21 +226,21 @@ var types = {
   ThrowStatement: function (item) {
     return {
       type: 'throw',
-      value: parseSection(item.argument, item)
+      value: parseSection(item.argument)
     }
   },
   WhileStatement: function (item) {
     return {
       type: 'while',
-      test: parseSection(item.test, item),
-      body: parseSection(item.body, item)
+      test: parseSection(item.test),
+      body: parseSection(item.body)
     }
   },
   DoWhileStatement: function (item) {
     return {
       type: 'do',
-      test: parseSection(item.test, item),
-      body: parseSection(item.body, item)
+      test: parseSection(item.test),
+      body: parseSection(item.body)
     }
   },
   ThisExpression: function (item) {
@@ -261,8 +255,8 @@ var types = {
           args = [true, true];
         } else {
           args = [
-            parseSection(item.discriminant, item),
-            parseSection(_case.test, _case)
+            parseSection(item.discriminant),
+            parseSection(_case.test)
           ];
         }
         return {
@@ -273,8 +267,8 @@ var types = {
           },
           then: {
             type: 'statement',
-            body: _case.consequent.map(function(_item) {
-              return parseSection(_item, item);
+            body: _case.consequent.map(function(item) {
+              return parseSection(item);
             })
           }
         }
@@ -285,7 +279,7 @@ var types = {
     return {
       type: '{}',
       properties: [
-        [parseSection(item.label, item),parseSection(item.body, item)]
+        [parseSection(item.label),parseSection(item.body)]
       ]
     }
   },
@@ -299,7 +293,7 @@ var types = {
   }*/
 };
 
-var parseSection = function (item, parent) {
+var parseSection = function (item) {
   if (item === null) {
     console.log('emptySection', item);
     return;
@@ -311,12 +305,12 @@ var parseSection = function (item, parent) {
     throw new Error('Section is not found! ' + item.type);
   }
 
-  return parser(item, parent);
+  return parser(item);
 };
 
 var astToJson = function (ast) {
   return ast.body.map(function (item) {
-    return parseSection(item, null);
+    return parseSection(item);
   });
 };
 
@@ -326,9 +320,6 @@ var ScriptToJson = function () {
 
 ScriptToJson.prototype.getJson = function (code) {
   var ast = acorn.parse(code);
-
-  console.log('ast', JSON.stringify(ast));
-
   var jsonScript = astToJson(ast);
   return JSON.parse(JSON.stringify(jsonScript));
 };
