@@ -215,6 +215,11 @@ Interpreter.prototype.getObjectProperty = function (scope, variable) {
     } else {
       property = _this.getPropValue(scope, variable.property);
     }
+  } else
+  if (variable.type === 'var') {
+    _this.runCommand(scope, variable);
+    object = scope;
+    property = variable.values[0].key;
   } else {
     noObject = true;
   }
@@ -366,7 +371,7 @@ Interpreter.prototype.commands = {
 
     var noObject = objProp.noObject;
     if (noObject) {
-      throw "Error! Left is not object!";
+      throw "forIn error! Left is not object!";
     }
 
     var obj = _this.getVariableValue(scope, command.right);
