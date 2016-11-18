@@ -3,12 +3,6 @@
  */
 var acorn = require('acorn');
 
-var paramsToArray = function (params) {
-  return params.map(function (item) {
-    return item.name;
-  });
-};
-
 var types = {
   VariableDeclaration: function (item) {
     return {
@@ -37,14 +31,18 @@ var types = {
   FunctionExpression: function (item) {
     return {
       type: 'function',
-      params: paramsToArray(item.params),
+      params: item.params.map(function (item) {
+        return parseSection(item);
+      }),
       body: parseSection(item.body)
     };
   },
   FunctionDeclaration: function (item) {
     var value = {
       type: 'function',
-      params: paramsToArray(item.params),
+      params: item.params.map(function (item) {
+        return parseSection(item);
+      }),
       body: parseSection(item.body)
     };
 

@@ -6,7 +6,13 @@ var ScriptToJson = require('./scriptToJson');
 var uglifyJs = require("uglify-js");
 
 var myScript = function () {
-  console.log('hello!');
+  var Fn = function (a,b) {
+    this.fn = function (c) {
+      return [a,b,c];
+    }
+  };
+  var fn = new Fn('a', 'b');
+  console.log(fn.fn('c'));
 };
 
 var stripFn = function (code) {
@@ -28,12 +34,23 @@ var stripFn = function (code) {
   var jsScript = stripFn(myScript);
 
   console.time('jsScript');
-  (new Function([], jsScript))();
+  var result;
+  try {
+    result = (new Function([], jsScript))();
+  } catch (e) {
+    console.error('jsScript', e.stack || e);
+  }
   console.timeEnd('jsScript');
+  console.log('jsScript result', result);
 
   var jsonScript = scriptToJson.getJson(jsScript);
 
   console.time('jsonScript');
-  interpreter.runScript(jsonScript);
+  try {
+    result = interpreter.runScript(jsonScript);
+  } catch (e) {
+    console.error('jsonScript', e.stack || e);
+  }
   console.timeEnd('jsonScript');
+  console.log('jsonScript result', result);
 })();
