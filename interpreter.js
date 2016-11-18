@@ -31,24 +31,14 @@ Interpreter.prototype.extendScope = function (customScope) {
 /**
  * @private
  */
-Interpreter.prototype.getVariable = function (scope, variable) {
-  var _this = this;
-  return {value: scope[variable], context: scope};
-};
-
-/**
- * @private
- */
 Interpreter.prototype.getVariableScope = function (scope, variable) {
   var _this = this;
-
   while (!scope.hasOwnProperty(variable)) {
     scope = scope.prototype;
     if (scope === undefined) {
       break;
     }
   }
-
   return scope;
 };
 
@@ -58,54 +48,6 @@ Interpreter.prototype.getPropValue = function (scope, variable) {
     return variable;
   } else {
     return _this.runCommand(scope, variable);
-  }
-};
-
-Interpreter.prototype.getVariableScopeProp = function (scope, variable) {
-  var _this = this;
-  if (typeof variable === 'string') {
-    return {
-      scope: _this.getVariableScope(scope, variable) || _this.scope,
-      var: variable
-    };
-  } else
-  if (variable.type === 'prop') {
-    return {
-      scope: _this.getVariableValue(scope, variable.value),
-      var: _this.getPropValue(scope, variable.prop)
-    };
-  } else {
-    return {
-      noScope: true,
-      var: _this.runCommand(scope, variable)
-    };
-  }
-};
-
-/**
- * @private
- */
-Interpreter.prototype.getVariableFunction = function (localScope, variable) {
-  var _this = this;
-  if (typeof variable !== 'object') {
-    return _this.getVariable(localScope, variable);
-  } else
-  if (variable.type === 'prop') {
-    return _this.getVariable(_this.getVariableValue(localScope, variable.value), _this.getPropValue(localScope, variable.prop));
-  } else {
-    return {value: _this.runCommand(localScope, variable), context: _this.scope};
-  }
-};
-
-/**
- * @private
- */
-Interpreter.prototype.getContext = function (context, localScope, forceContext) {
-  var _this = this;
-  if (forceContext) {
-    return _this.getVariableValue(localScope, forceContext);
-  } else {
-    return context || _this.scope;
   }
 };
 
@@ -128,7 +70,7 @@ Interpreter.prototype.buildArgs = function (scope, args) {
 Interpreter.prototype.getVariableValue = function (scope, variable) {
   var _this = this;
   if (typeof variable !== 'object') {
-    return _this.getVariable(scope, variable).value;
+    return scope[variable];
   } else {
     return _this.runCommand(scope, variable);
   }
@@ -153,108 +95,151 @@ Interpreter.prototype.getLocalScope = function (scope, context, args, callArgs) 
   return localScope;
 };
 
+Interpreter.prototype.getObjectProperty = function (scope, variable) {
+  var _this = this;
+  var noObject = false;
+  var object;
+  var property;
+
+  if (typeof variable !== 'object') {
+    object = _this.getVariableScope(scope, variable);
+    property = variable;
+  } else
+  if (variable.type === 'member') {
+    object = _this.getVariableValue(scope, variable.object);
+    property = _this.getPropValue(scope, variable.property);
+  } else {
+    noObject = true;
+  }
+
+  return {object: object, noObject: noObject, property: property};
+};
+
 /**
  * @private
  */
 Interpreter.prototype.commands = {
   var: function (_this, scope, command) {
-    scope[command.name] = _this.getVariableValue(scope, command.value);
+    var item, key;
+    for (var i = 0, len = command.values.length; i < len; i++) {
+      item = command.values[i];
+      key = _this.getPropValue(scope, item.key);
+      scope[key] = item.value && _this.getVariableValue(scope, item.value);
+    }
   },
   call: function (_this, scope, command) {
-    var details = _this.getVariableFunction(scope, command.value);
-    var context = _this.getContext(details.context, scope, command.context);
-    var fnArgs = _this.buildArgs(scope, command.args);
-    var fn = details.value;
-    if (typeof fn !== 'function') {
-      throw new Error('Call ' + JSON.stringify(command.value) + ' is not a function!');
+    var objProp = _this.getObjectProperty(scope, command.callee);
+    var property = objProp.property;
+    var object = objProp.object;
+    var noObject = objProp.noObject;
+    var fn;
+    if (objProp.noObject) {
+      fn = _this.getVariableValue(scope, command.callee);
+    } else {
+      fn = object[property];
     }
-    return fn.apply(context, fnArgs);
-  },
-  apply: function (_this, scope, command) {
-    var details = _this.getVariableFunction(scope, command.value);
-    var context = _this.getContext(details.context, scope, command.context);
-    var fnArgs = _this.getVariableValue(scope, command.args);
-    var fn = details.value;
+
+    var args = _this.buildArgs(scope, command.params);
+
     if (typeof fn !== 'function') {
-      throw new Error('Apply ' + JSON.stringify(command.value) + ' is not a function!');
+      throw new Error('Call ' + JSON.stringify(callee) + ' is not a function!');
     }
-    return fn.apply(context, fnArgs);
-  },
-  new: function (_this, scope, command) {
-    var details = _this.getVariableFunction(scope, command.value);
-    var args = _this.buildArgs(scope, command.args);
-    var fn = details.value;
-    if (typeof fn !== 'function') {
-      throw new Error('new Function ' + JSON.stringify(command.value) + ' is not a function!');
-    }
-    if (!args.length) {
-      return new fn();
-    } else
-    if (args.length === 1) {
-      return new fn(args[0]);
-    } else
-    if (args.length === 2) {
-      return new fn(args[0], args[1]);
-    } else
-    if (args.length === 3) {
-      return new fn(args[0], args[1], args[3]);
+
+    if (command.isNew) {
+      if (noObject) {
+        return new (fn.bind.apply(fn, args.unshift(_this.scope)))();
+      } else {
+        return new (fn.bind.apply(fn, args))();
+      }
+    } else {
+      if (noObject) {
+        return fn.apply(_this.scope, args);
+      } else {
+        return fn.apply(object, args);
+      }
     }
   },
-  'prop': function (_this, scope, command) {
-    var value = _this.getVariableValue(scope, command.value);
-    var prop = _this.getPropValue(scope, command.prop);
-    return value[prop];
+  member: function (_this, scope, command) {
+    var object = _this.getVariableValue(scope, command.object);
+    var property = _this.getPropValue(scope, command.property);
+    return object[property];
   },
   '{}': function (_this, scope, command) {
     var obj = {};
     command.properties.forEach(function (keyValue) {
-      var key = keyValue[0];
+      var key = _this.getPropValue(scope, keyValue[0]);
       obj[key] = _this.getVariableValue(scope, keyValue[1]);
     });
     return obj;
   },
   '[]': function (_this, scope, command) {
-    var arr = new Array(command.elements.length);
-    command.elements.forEach(function (value, i) {
+    var arr = new Array(command.values.length);
+    command.values.forEach(function (value, i) {
       arr[i] = _this.getVariableValue(scope, value);
     });
     return arr;
   },
   '=': function (_this, scope, command) {
-    var scopeProperty = _this.getVariableScopeProp(scope, command.var);
-    var vScope = scopeProperty.scope;
-    var variable = scopeProperty.var;
-    var value = _this.getVariableValue(scope, command.value);
-    if (!scopeProperty.noScope) {
-      vScope[variable] = value
+    var objProp = _this.getObjectProperty(scope, command.left);
+    var noObject = objProp.noObject;
+    var object = objProp.object;
+    var property = objProp.property;
+
+    var value = _this.getVariableValue(scope, command.right);
+
+    if (noObject) {
+      return value;
+    } else {
+      return object[property] = value;
     }
-    return value;
   },
   '+=': function (_this, scope, command) {
-    var scopeProperty = _this.getVariableScopeProp(scope, command.var);
-    var vScope = scopeProperty.scope;
-    var variable = scopeProperty.var;
-    var value = _this.getVariableValue(scope, command.value);
-    return vScope[variable] += value
+    var objProp = _this.getObjectProperty(scope, command.left);
+    var noObject = objProp.noObject;
+    var object = objProp.object;
+    var property = objProp.property;
+
+    if (noObject) {
+      throw "Error! Left is not object!";
+    } else {
+      return object[property] += _this.getVariableValue(scope, command.right);
+    }
   },
   '-=': function (_this, scope, command) {
-    var scopeProperty = _this.getVariableScopeProp(scope, command.var);
-    var vScope = scopeProperty.scope;
-    var variable = scopeProperty.var;
-    var value = _this.getVariableValue(scope, command.value);
-    return vScope[variable] -= value
+    var objProp = _this.getObjectProperty(scope, command.left);
+    var noObject = objProp.noObject;
+    var object = objProp.object;
+    var property = objProp.property;
+
+    if (noObject) {
+      throw "Error! Left is not object!";
+    } else {
+      return object[property] -= _this.getVariableValue(scope, command.right);
+    }
   },
   '++': function (_this, scope, command) {
-    var scopeProperty = _this.getVariableScopeProp(scope, command.var);
-    var vScope = scopeProperty.scope;
-    var variable = scopeProperty.var;
-    return vScope[variable]++;
+    var objProp = _this.getObjectProperty(scope, command.left);
+    var noObject = objProp.noObject;
+    var object = objProp.object;
+    var property = objProp.property;
+
+    if (noObject) {
+      throw "Error! Left is not object!";
+    } else {
+      return object[property]++;
+    }
   },
   '--': function (_this, scope, command) {
-    var scopeProperty = _this.getVariableScopeProp(scope, command.var);
-    var vScope = scopeProperty.scope;
-    var variable = scopeProperty.var;
-    return vScope[variable]--;
+    var objProp = _this.getObjectProperty(scope, command.left);
+    var noObject = objProp.noObject;
+    var object = objProp.object;
+    var property = objProp.property;
+
+    if (noObject) {
+      throw "Error! Left is not object!";
+    } else {
+      return object[property]--;
+    }
   },
   return: function (_this, scope, command) {
     var value = _this.getVariableValue(scope, command.value);
@@ -266,18 +251,18 @@ Interpreter.prototype.commands = {
   },
   function: function (_this, scope, command) {
     return function () {
-      var localScope = _this.getLocalScope(scope, this, command.args, [].slice.call(arguments));
-      var result = _this.runCommand(localScope, command.value);
+      var localScope = _this.getLocalScope(scope, this, command.params, [].slice.call(arguments));
+      var result = _this.runCommand(localScope, command.body);
       if (localScope.return === true) {
         return result;
       }
     };
   },
   statement: function (_this, scope, command) {
-    return _this.execScript(scope, command.value);
+    return _this.execScript(scope, command.body);
   },
   if: function (_this, scope, command) {
-    var result = _this.getVariableValue(scope, command.condition);
+    var result = _this.getVariableValue(scope, command.test);
     if (result) {
       return command.then && _this.runCommand(scope, command.then);
     } else {
@@ -289,8 +274,8 @@ Interpreter.prototype.commands = {
   },
   for: function (_this, scope, command) {
     command.init && _this.runCommand(scope, command.init);
-    for (;_this.getVariableValue(scope, command.condition);_this.getVariableValue(scope, command.update)) {
-      _this.runCommand(scope, command.value);
+    for (;_this.getVariableValue(scope, command.test);_this.getVariableValue(scope, command.update)) {
+      _this.runCommand(scope, command.body);
       if (scope.break == true) {
         delete scope.break;
         break;
@@ -298,8 +283,8 @@ Interpreter.prototype.commands = {
     }
   },
   while: function (_this, scope, command) {
-    while (_this.getVariableValue(scope, command.condition)) {
-      _this.runCommand(scope, command.value);
+    while (_this.getVariableValue(scope, command.test)) {
+      _this.runCommand(scope, command.body);
       if (scope.break == true) {
         delete scope.break;
         break;
@@ -308,12 +293,12 @@ Interpreter.prototype.commands = {
   },
   do: function (_this, scope, command) {
     do {
-      _this.runCommand(scope, command.value);
+      _this.runCommand(scope, command.body);
       if (scope.break == true) {
         delete scope.break;
         break;
       }
-    } while (_this.getVariableValue(scope, command.condition));
+    } while (_this.getVariableValue(scope, command.test));
   },
   throw: function (_this, scope, command) {
     throw _this.getVariableValue(scope, command.value);
@@ -321,54 +306,54 @@ Interpreter.prototype.commands = {
   try: function (_this, scope, command) {
     var result;
     try {
-      result = _this.runCommand(scope, command.value);
+      result = _this.runCommand(scope, command.block);
     } catch (err) {
       if (command.catch) {
-        var localScope = _this.getLocalScope(scope, this, command.args, [err]);
+        var localScope = _this.getLocalScope(scope, this, command.params, [err]);
         result = _this.runCommand(localScope, command.catch);
       }
     }
     return result;
   },
   '+': function (_this, scope, command) {
-    var args = _this.buildArgs(scope, command.args);
-    return args[0] + args[1];
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] + values[1];
   },
   '-': function (_this, scope, command) {
-    var args = _this.buildArgs(scope, command.args);
-    return args[0] - args[1];
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] - values[1];
   },
   '*': function (_this, scope, command) {
-    var args = _this.buildArgs(scope, command.args);
-    return args[0] * args[1];
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] * values[1];
   },
   '/': function (_this, scope, command) {
-    var args = _this.buildArgs(scope, command.args);
-    return args[0] / args[1];
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] / values[1];
   },
   '==': function (_this, scope, command) {
-    var args = _this.buildArgs(scope, command.args);
-    return args[0] == args[1];
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] == values[1];
   },
   '===': function (_this, scope, command) {
-    var args = _this.buildArgs(scope, command.args);
-    return args[0] === args[1];
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] === values[1];
   },
   '&&': function (_this, scope, command) {
-    var args = _this.buildArgs(scope, command.args);
-    return args[0] && args[1];
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] && values[1];
   },
   '||': function (_this, scope, command) {
-    var args = _this.buildArgs(scope, command.args);
-    return args[0] || args[1];
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] || values[1];
   },
   '>': function (_this, scope, command) {
-    var args = _this.buildArgs(scope, command.args);
-    return args[0] > args[1];
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] > values[1];
   },
   '<': function (_this, scope, command) {
-    var args = _this.buildArgs(scope, command.args);
-    return args[0] < args[1];
+    var values = _this.buildArgs(scope, command.values);
+    return values[0] < values[1];
   },
   'void': function (_this, scope, command) {
     var value = _this.getVariableValue(scope, command.value);
@@ -400,6 +385,10 @@ Interpreter.prototype.execScript = function (localScope, script) {
   var _this = this;
   var index = 0;
   var len = script.length;
+  if (len === 0) {
+    return;
+  }
+
   var next = function () {
     var command = script[index++];
     var result = _this.runCommand(localScope, command);

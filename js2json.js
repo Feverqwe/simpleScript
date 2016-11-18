@@ -7,25 +7,13 @@ var UglifyJS = require("uglify-js");
 
 var getAst = function () {
   var code = function () {
-    var user = { firstName: "Вася" };
-    var admin = { firstName: "Админ" };
-
-    function func() {
-      console.log( this.firstName );
-    }
-
-    user.f = func;
-    admin.g = func;
-
-// this равен объекту перед точкой:
-    user.f(); // Вася
-    admin.g(); // Админ
-    admin['g']();
+    var t = {a: {b: {c: [1, 2, {}, 3]}}};
+    console.log(t.a.b.c)
   };
   code = code.toString();
   code = code.substr(code.indexOf('{') + 1);
   code = code.substr(0, code.lastIndexOf('}'));
-  // code = UglifyJS.minify(code, {fromString: true}).code;
+  code = UglifyJS.minify(code, {fromString: true}).code;
 
   console.log('Code', code);
 
@@ -41,32 +29,40 @@ var paramsToArray = function (params) {
 var types = {
   VariableDeclaration: function (item) {
     return {
-      type: 'statement',
-      value: item.declarations.map(function (item) {
-        return parseSection(item);
+      type: item.kind,
+      values: item.declarations.map(function (item) {
+        if (item.type !== 'VariableDeclarator') {
+          throw new Error('Unsupported type!');
+        }
+
+        var key = parseSection(item.id);
+        var value;
+        if (item.init) {
+          value = parseSection(item.init);
+        }
+        return {key: key, value: value};
       })
     };
   },
-  VariableDeclarator: function (item) {
-    var id = item.id;
-    var value;
-    if (item.init) {
-      value = parseSection(item.init);
+  Identifier: function (item) {
+    if (item.name === 'undefined') {
+      return;
+    } else {
+      return item.name;
     }
-    return {type: 'var', name: id.name, value: value};
   },
   FunctionExpression: function (item) {
     return {
       type: 'function',
-      args: paramsToArray(item.params),
-      value: parseSection(item.body)
+      params: paramsToArray(item.params),
+      body: parseSection(item.body)
     };
   },
   FunctionDeclaration: function (item) {
     var value = {
       type: 'function',
-      args: paramsToArray(item.params),
-      value: parseSection(item.body)
+      params: paramsToArray(item.params),
+      body: parseSection(item.body)
     };
 
     if (item.id.name) {
@@ -82,13 +78,13 @@ var types = {
   ForStatement: function (item) {
     var obj = {
       type: 'for',
-      value: parseSection(item.body)
+      body: parseSection(item.body)
     };
     if (item.init) {
       obj.init = parseSection(item.init);
     }
-    if (item.condition) {
-      obj.condition = parseSection(item.condition);
+    if (item.test) {
+      obj.test = parseSection(item.test);
     }
     if (item.update) {
       obj.update = parseSection(item.update);
@@ -98,14 +94,14 @@ var types = {
   BlockStatement: function (item) {
     return {
       type: 'statement',
-      value: item.body.map(function (item) {
+      body: item.body.map(function (item) {
         return parseSection(item);
       })
     };
   },
   Literal: function (item) {
     if (item.regex) {
-      return {type: 'new', value: 'RegExp', args: [
+      return {type: 'new', value: 'RegExp', params: [
         {type: 'raw', data: item.regex.pattern},
         {type: 'raw', data: item.regex.flags}
       ]};
@@ -119,58 +115,49 @@ var types = {
   BinaryExpression: function (item) {
     return {
       type: item.operator,
-      args: [parseSection(item.left), parseSection(item.right)]
+      values: [parseSection(item.left), parseSection(item.right)]
     };
-  },
-  Identifier: function (item) {
-    if (item.name === 'undefined') {
-      return;
-    } else {
-      return item.name;
-    }
   },
   ExpressionStatement: function (item) {
     return parseSection(item.expression);
   },
   CallExpression: function (item) {
-    var value = parseSection(item.callee);
-    var args = item.arguments.map(function (item) {
-      return parseSection(item);
-    });
-    var obj = {
+    return {
       type: 'call',
-      value: value,
-      args: args
+      callee: parseSection(item.callee),
+      params: item.arguments.map(function (item) {
+        return parseSection(item);
+      })
     };
-    return obj;
   },
   MemberExpression: function (item) {
     return {
-      type: 'prop',
-      value: parseSection(item.object),
-      prop: parseSection(item.property)
-    };
-  },
-  AssignmentExpression: function (item) {
-    return {
-      type: item.operator,
-      var: parseSection(item.left),
-      value: parseSection(item.right)
+      type: 'member',
+      object: parseSection(item.object),
+      property: parseSection(item.property)
     };
   },
   NewExpression: function (item) {
     return {
-      type: 'new',
-      value: item.callee.name,
-      args: item.arguments.map(function (item) {
+      type: 'call',
+      isNew: true,
+      callee: parseSection(item.callee),
+      params: item.arguments.map(function (item) {
         return parseSection(item);
       })
     }
   },
+  AssignmentExpression: function (item) {
+    return {
+      type: item.operator,
+      left: parseSection(item.left),
+      right: parseSection(item.right)
+    };
+  },
   SequenceExpression: function (item) {
     return {
       type: 'statement',
-      value: item.expressions.map(function (item) {
+      body: item.expressions.map(function (item) {
         return parseSection(item);
       })
     };
@@ -178,7 +165,7 @@ var types = {
   IfStatement: function (item) {
     var obj = {
       type: 'if',
-      condition: parseSection(item.test)
+      test: parseSection(item.test)
     };
     if (item.consequent) {
       obj.then = parseSection(item.consequent);
@@ -191,13 +178,13 @@ var types = {
   LogicalExpression: function (item) {
     return {
       type: item.operator,
-      args: [parseSection(item.left), parseSection(item.right)]
+      values: [parseSection(item.left), parseSection(item.right)]
     }
   },
   ConditionalExpression: function (item) {
     return {
       type: 'if',
-      condition: parseSection(item.test),
+      test: parseSection(item.test),
       then: parseSection(item.consequent),
       else: parseSection(item.alternate)
     }
@@ -216,7 +203,7 @@ var types = {
   ArrayExpression: function (item) {
     return {
       type: '[]',
-      elements: item.elements.map(function (item) {
+      values: item.elements.map(function (item) {
         return parseSection(item);
       })
     }
@@ -230,7 +217,7 @@ var types = {
   UpdateExpression: function (item) {
     return {
       type: item.operator,
-      var: parseSection(item.argument)
+      left: parseSection(item.argument)
     }
   },
   BreakStatement: function (item) {
@@ -241,19 +228,17 @@ var types = {
   EmptyStatement: function (item) {
     return {
       type: 'statement',
-      value: []
+      body: []
     }
   },
   TryStatement: function (item) {
     var obj = {
       type: 'try',
-      value: parseSection(item.block),
+      block: parseSection(item.block),
       catch: parseSection(item.handler.body)
     };
 
-    if (item.handler.param.name) {
-      obj.args = [item.handler.param.name];
-    }
+    obj.params = [item.handler.param.name];
 
     return obj;
   },
@@ -266,15 +251,15 @@ var types = {
   WhileStatement: function (item) {
     return {
       type: 'while',
-      condition: parseSection(item.test),
-      value: parseSection(item.body)
+      test: parseSection(item.test),
+      body: parseSection(item.body)
     }
   },
   DoWhileStatement: function (item) {
     return {
       type: 'do',
-      condition: parseSection(item.test),
-      value: parseSection(item.body)
+      test: parseSection(item.test),
+      body: parseSection(item.body)
     }
   },
   ThisExpression: function (item) {
@@ -283,7 +268,7 @@ var types = {
   SwitchStatement: function (item) {
     return {
       type: 'statement',
-      value: item.cases.map(function (_case) {
+      body: item.cases.map(function (_case) {
         var args;
         if (_case.test === null) {
           args = [true, true];
@@ -295,13 +280,13 @@ var types = {
         }
         return {
           type: 'if',
-          condition: {
+          test: {
             type: '===',
-            args: args
+            values: args
           },
           then: {
             type: 'statement',
-            value: _case.consequent.map(function(item) {
+            body: _case.consequent.map(function(item) {
               return parseSection(item);
             })
           }
@@ -309,12 +294,25 @@ var types = {
       })
     }
   },
+  LabeledStatement: function (item) {
+    return {
+      type: '{}',
+      properties: [
+        [parseSection(item.label),parseSection(item.body)]
+      ]
+    }
+  }
   /*ForInStatement: function (item) {
 
   }*/
 };
 
 var parseSection = function (item) {
+  if (item === null) {
+    console.log('emptySection', item.type);
+    return;
+  }
+
   console.log('parseSection', item.type);
 
   try {
@@ -322,12 +320,12 @@ var parseSection = function (item) {
     if (!parser) {
       throw new Error('Section is not found! ' + item.type);
     }
+
+    return parser(item);
   } catch(e) {
     console.log('Error statement', JSON.stringify(item));
     throw new Error('Section parse error! ' + item.type);
   }
-
-  return parser(item);
 };
 
 var astToJson = function (ast) {
@@ -340,6 +338,7 @@ var astToJson = function (ast) {
   var ast = getAst();
   var interpreter = new Interpreter({
     RegExp: RegExp,
+    JSON: JSON,
     console: console
   });
 
