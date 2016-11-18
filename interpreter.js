@@ -273,7 +273,7 @@ Interpreter.prototype.commands = {
     return function () {
       var localScope = _this.getLocalScope(scope, this, command.params, [].slice.call(arguments));
       var result = _this.runCommand(localScope, command.body);
-      if (localScope.return === true) {
+      if (scope.hasOwnProperty('return') && localScope.return === true) {
         return result;
       }
     };
@@ -300,7 +300,7 @@ Interpreter.prototype.commands = {
     for (;_this.getVariableValue(scope, command.test);_this.getVariableValue(scope, command.update)) {
       delete scope.continue;
       _this.runCommand(scope, command.body);
-      if (scope.break == true) {
+      if (scope.hasOwnProperty('break') && scope.break == true) {
         delete scope.break;
         break;
       }
@@ -310,7 +310,7 @@ Interpreter.prototype.commands = {
     while (_this.getVariableValue(scope, command.test)) {
       delete scope.continue;
       _this.runCommand(scope, command.body);
-      if (scope.break == true) {
+      if (scope.hasOwnProperty('break') && scope.break == true) {
         delete scope.break;
         break;
       }
@@ -320,7 +320,7 @@ Interpreter.prototype.commands = {
     do {
       delete scope.continue;
       _this.runCommand(scope, command.body);
-      if (scope.break == true) {
+      if (scope.hasOwnProperty('break') && scope.break == true) {
         delete scope.break;
         break;
       }
@@ -429,7 +429,12 @@ Interpreter.prototype.execScript = function (localScope, script) {
     } else {
       result = _this.runCommand(localScope, command);
     }
-    if (len === index || localScope.return === true || localScope.break === true || localScope.continue === true) {
+    if (
+      len === index ||
+      (localScope.hasOwnProperty('return') && localScope.return === true) ||
+      (localScope.hasOwnProperty('break') && localScope.break === true) ||
+      (localScope.hasOwnProperty('continue') && localScope.continue === true)
+    ) {
       return result;
     } else {
       return next();
