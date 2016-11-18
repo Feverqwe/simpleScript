@@ -94,14 +94,13 @@ Interpreter.prototype.initOperators = function () {
       var objProp = _this.getObjectProperty(scope, command.left);
       if (objProp.noObject) {
         throw "Error! Left is not object!";
-      } else {
-        return operator(objProp.object, objProp.property, scope, command.right);
       }
+      return operator(objProp.object, objProp.property, scope, command.right);
     };
   });
   var inc_operators = {
-    '++': function (o,p) {return o[p]++},
-    '--': function (o,p) {return o[p]--}
+    '++': function (o,p,c) {return c.prefix ? ++o[p] : o[p]++},
+    '--': function (o,p,c) {return c.prefix ? --o[p] : o[p]--}
   };
   Object.keys(inc_operators).forEach(function (key) {
     var operator = inc_operators[key];
@@ -109,9 +108,8 @@ Interpreter.prototype.initOperators = function () {
       var objProp = _this.getObjectProperty(scope, command.left);
       if (objProp.noObject) {
         throw "Error! Left is not object!";
-      } else {
-        return operator(objProp.object, objProp.property);
       }
+      return operator(objProp.object, objProp.property, command);
     };
   });
 };
@@ -358,7 +356,10 @@ Interpreter.prototype.commands = {
     for (;_this.getVariableValue(scope, command.test);_this.getVariableValue(scope, command.update)) {
       delete scope.continue;
       _this.runCommand(scope, command.body);
-      if (scope.hasOwnProperty('break') && scope.break == true) {
+      if (
+        (scope.hasOwnProperty('break') && scope.break == true) ||
+        (scope.hasOwnProperty('return') && scope.return == true)
+      ) {
         delete scope.break;
         break;
       }
@@ -380,7 +381,10 @@ Interpreter.prototype.commands = {
       delete scope.continue;
       object[property] = key;
       _this.runCommand(scope, command.body);
-      if (scope.hasOwnProperty('break') && scope.break == true) {
+      if (
+        (scope.hasOwnProperty('break') && scope.break == true) ||
+        (scope.hasOwnProperty('return') && scope.return == true)
+      ) {
         delete scope.break;
         break;
       }
@@ -390,7 +394,10 @@ Interpreter.prototype.commands = {
     while (_this.getVariableValue(scope, command.test)) {
       delete scope.continue;
       _this.runCommand(scope, command.body);
-      if (scope.hasOwnProperty('break') && scope.break == true) {
+      if (
+        (scope.hasOwnProperty('break') && scope.break == true) ||
+        (scope.hasOwnProperty('return') && scope.return == true)
+      ) {
         delete scope.break;
         break;
       }
@@ -400,7 +407,10 @@ Interpreter.prototype.commands = {
     do {
       delete scope.continue;
       _this.runCommand(scope, command.body);
-      if (scope.hasOwnProperty('break') && scope.break == true) {
+      if (
+        (scope.hasOwnProperty('break') && scope.break == true) ||
+        (scope.hasOwnProperty('return') && scope.return == true)
+      ) {
         delete scope.break;
         break;
       }

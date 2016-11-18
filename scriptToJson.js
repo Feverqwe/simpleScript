@@ -200,6 +200,7 @@ var types = {
   UpdateExpression: function (item) {
     return {
       type: item.operator,
+      prefix: item.prefix,
       left: parseSection(item.argument)
     }
   },
@@ -327,6 +328,9 @@ var ScriptToJson = function () {
 
 ScriptToJson.prototype.getJson = function (code) {
   var ast = acorn.parse(code);
+
+  console.log('ast', JSON.stringify(ast));
+
   var jsonScript = astToJson(ast);
   return JSON.parse(JSON.stringify(jsonScript));
 };
