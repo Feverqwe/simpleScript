@@ -6,19 +6,20 @@ var ScriptToJson = require('./scriptToJson');
 var uglifyJs = require("uglify-js");
 
 var myScript = function () {
-  var Fn = function (a,b) {
-    this.fn = function (c) {
-      return [a,b,c];
-    }
-  };
-  var fn = new Fn('a', 'b');
-  console.log(fn.fn('c'));
+
+  // for (var text_index = 0; text_index < 50000; text_index++) {
+
+  console.log('hi');
+
+  // }
+
 };
 
 var stripFn = function (code) {
   code = code.toString();
   code = code.substr(code.indexOf('{') + 1);
   code = code.substr(0, code.lastIndexOf('}'));
+
   code = uglifyJs.minify(code, {fromString: true}).code;
 
   return code;
@@ -26,12 +27,18 @@ var stripFn = function (code) {
 
 (function () {
   var interpreter = new Interpreter({
-    console: console
+    console: console,
+    Date: Date,
+    Object: Object,
+    Array: Array,
+    Math: Math,
+    RegExp: RegExp
   });
 
   var scriptToJson = new ScriptToJson();
 
   var jsScript = stripFn(myScript);
+  console.log('jsScript', jsScript);
 
   console.time('jsScript');
   var result;
