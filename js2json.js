@@ -7,8 +7,7 @@ var UglifyJS = require("uglify-js");
 
 var getAst = function () {
   var code = function () {
-    var t = {a: {b: {c: [1, 2, {}, 3]}}};
-    console.log(t.a.b.c)
+    /test/.test(test)
   };
   code = code.toString();
   code = code.substr(code.indexOf('{') + 1);
@@ -101,7 +100,7 @@ var types = {
   },
   Literal: function (item) {
     if (item.regex) {
-      return {type: 'new', value: 'RegExp', params: [
+      return {type: 'call', isNew: true, callee: 'RegExp', params: [
         {type: 'raw', data: item.regex.pattern},
         {type: 'raw', data: item.regex.flags}
       ]};
