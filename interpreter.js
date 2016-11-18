@@ -434,8 +434,12 @@ Interpreter.prototype.commands = {
  */
 Interpreter.prototype.runCommand = function (scope, command) {
   var _this = this;
-  var type = command.type;
-  return _this.commands[type](_this, scope, command);
+  if (typeof command === 'string') {
+    return _this.getVariableValue(scope, command);
+  } else {
+    var type = command.type;
+    return _this.commands[type](_this, scope, command);
+  }
 };
 
 /**
@@ -450,13 +454,8 @@ Interpreter.prototype.execScript = function (localScope, script) {
   }
 
   var next = function () {
-    var result;
     var command = script[index++];
-    if (typeof command === 'string') {
-      result = _this.getVariableValue(localScope, command);
-    } else {
-      result = _this.runCommand(localScope, command);
-    }
+    var result = _this.runCommand(localScope, command);
     if (
       len === index ||
       (localScope.hasOwnProperty('return') && localScope.return === true) ||
