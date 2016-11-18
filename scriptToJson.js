@@ -22,11 +22,11 @@ var types = {
     };
   },
   Identifier: function (item) {
+    var value = item.name;
     if (item.name === 'undefined') {
-      return;
-    } else {
-      return item.name;
+      value = undefined;
     }
+    return item.name;
   },
   FunctionExpression: function (item) {
     return {
@@ -46,11 +46,12 @@ var types = {
       body: parseSection(item.body)
     };
 
-    if (item.id.name) {
+    if (item.id) {
       value = {
         type: 'var',
-        name: item.id.name,
-        value: value
+        values: [
+          {key: parseSection(item.id, item), value: value}
+        ]
       };
     }
 
