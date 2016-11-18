@@ -7,7 +7,13 @@ var UglifyJS = require("uglify-js");
 
 var getAst = function () {
   var code = function () {
-    /test/.test(test)
+    for (var i = 0; i < 10; i++) {
+      console.log(i);
+      if(i>5){
+        continue;
+      }
+      console.log('l', i);
+    }
   };
   code = code.toString();
   code = code.substr(code.indexOf('{') + 1);
@@ -300,6 +306,11 @@ var types = {
         [parseSection(item.label),parseSection(item.body)]
       ]
     }
+  },
+  ContinueStatement: function (item) {
+    return {
+      type: 'continue'
+    }
   }
   /*ForInStatement: function (item) {
 
@@ -308,23 +319,17 @@ var types = {
 
 var parseSection = function (item) {
   if (item === null) {
-    console.log('emptySection', item.type);
+    console.log('emptySection', item);
     return;
   }
 
-  console.log('parseSection', item.type);
-
-  try {
-    var parser = types[item.type];
-    if (!parser) {
-      throw new Error('Section is not found! ' + item.type);
-    }
-
-    return parser(item);
-  } catch(e) {
+  var parser = types[item.type];
+  if (!parser) {
     console.log('Error statement', JSON.stringify(item));
-    throw new Error('Section parse error! ' + item.type);
+    throw new Error('Section is not found! ' + item.type);
   }
+
+  return parser(item);
 };
 
 var astToJson = function (ast) {
@@ -338,6 +343,8 @@ var astToJson = function (ast) {
   var interpreter = new Interpreter({
     RegExp: RegExp,
     JSON: JSON,
+    parseInt: parseInt,
+    Date: Date,
     console: console
   });
 
@@ -347,6 +354,9 @@ var astToJson = function (ast) {
   var jsonScript = astToJson(ast);
   console.log('jsonScript', JSON.stringify(jsonScript));
 
+  console.time('jsonScript');
   var result = interpreter.runScript(jsonScript);
+  console.timeEnd('jsonScript');
+
   console.log('result', result);
 })();
