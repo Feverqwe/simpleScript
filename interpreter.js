@@ -136,7 +136,7 @@ Interpreter.prototype.getVariableScope = function (scope, variable) {
       break;
     }
   }
-  return scope;
+  return scope || _this.scope;
 };
 
 /**
@@ -352,6 +352,28 @@ Interpreter.prototype.commands = {
     command.init && _this.runCommand(scope, command.init);
     for (;_this.getVariableValue(scope, command.test);_this.getVariableValue(scope, command.update)) {
       delete scope.continue;
+      _this.runCommand(scope, command.body);
+      if (scope.hasOwnProperty('break') && scope.break == true) {
+        delete scope.break;
+        break;
+      }
+    }
+  },
+  forIn: function (_this, scope, command) {
+    var objProp = _this.getObjectProperty(scope, command.left);
+    var property = objProp.property;
+    var object = objProp.object;
+
+    var noObject = objProp.noObject;
+    if (noObject) {
+      throw "Error! Left is not object!";
+    }
+
+    var obj = _this.getVariableValue(scope, command.right);
+
+    for (var key in obj) {
+      delete scope.continue;
+      object[property] = key;
       _this.runCommand(scope, command.body);
       if (scope.hasOwnProperty('break') && scope.break == true) {
         delete scope.break;

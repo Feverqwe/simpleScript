@@ -289,10 +289,15 @@ var types = {
     return {
       type: 'continue'
     }
+  },
+  ForInStatement: function (item) {
+    return {
+      type: 'forIn',
+      left: parseSection(item.left),
+      right: parseSection(item.right),
+      body: parseSection(item.body)
+    };
   }
-  /*ForInStatement: function (item) {
-
-  }*/
 };
 
 var parseSection = function (item) {
