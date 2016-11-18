@@ -297,6 +297,10 @@ Interpreter.prototype.commands = {
     var objProp = _this.getObjectProperty(scope, command.value);
     return delete objProp.object[objProp.property];
   },
+  in: function (_this, scope, command) {
+    var values = _this.buildArgs(scope, command.values);
+    return (values[0] in values[1]);
+  },
   instanceof: function (_this, scope, command) {
     var values = _this.buildArgs(scope, command.values);
     return (values[0] instanceof values[1]);
