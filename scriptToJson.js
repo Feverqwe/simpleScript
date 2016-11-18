@@ -114,6 +114,7 @@ var types = {
   MemberExpression: function (item) {
     return {
       type: 'member',
+      computed: item.computed,
       object: parseSection(item.object),
       property: parseSection(item.property)
     };

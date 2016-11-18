@@ -210,7 +210,11 @@ Interpreter.prototype.getObjectProperty = function (scope, variable) {
   } else
   if (variable.type === 'member') {
     object = _this.getVariableValue(scope, variable.object);
-    property = _this.getPropValue(scope, variable.property);
+    if (variable.computed) {
+      property = _this.getVariableValue(scope, variable.property);
+    } else {
+      property = _this.getPropValue(scope, variable.property);
+    }
   } else {
     noObject = true;
   }
@@ -266,7 +270,12 @@ Interpreter.prototype.commands = {
   },
   member: function (_this, scope, command) {
     var object = _this.getVariableValue(scope, command.object);
-    var property = _this.getPropValue(scope, command.property);
+    var property;
+    if (command.computed) {
+      property = _this.getVariableValue(scope, command.property);
+    } else {
+      property = _this.getPropValue(scope, command.property);
+    }
     return object[property];
   },
   '{}': function (_this, scope, command) {
