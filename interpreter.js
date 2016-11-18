@@ -152,11 +152,13 @@ Interpreter.prototype.commands = {
     }
 
     if (command.isNew) {
+      var _args = args.slice(0);
       if (noObject) {
-        return new (Function.prototype.bind.apply(fn, args.unshift(_this.scope)));
+        _args.unshift(_this.scope);
+        return new (Function.prototype.bind.apply(fn, _args));
       } else {
-        args.unshift(fn);
-        return new (Function.prototype.bind.apply(fn, args));
+        _args.unshift(fn);
+        return new (Function.prototype.bind.apply(fn, _args));
       }
     } else {
       if (noObject) {
