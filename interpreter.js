@@ -42,6 +42,9 @@ Interpreter.prototype.getVariableScope = function (scope, variable) {
   return scope;
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.getPropValue = function (scope, variable) {
   var _this = this;
   if (typeof variable !== 'object') {
@@ -95,6 +98,9 @@ Interpreter.prototype.getLocalScope = function (scope, context, args, callArgs) 
   return localScope;
 };
 
+/**
+ * @private
+ */
 Interpreter.prototype.getObjectProperty = function (scope, variable) {
   var _this = this;
   var noObject = false;
