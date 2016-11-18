@@ -44,6 +44,7 @@ var stripFn = function (code) {
   console.log('jsScript result', result);
 
   var jsonScript = scriptToJson.getJson(jsScript);
+  console.log('jsonScript', JSON.stringify(jsonScript));
 
   console.time('jsonScript');
   try {
