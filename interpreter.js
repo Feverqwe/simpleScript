@@ -291,9 +291,13 @@ Interpreter.prototype.commands = {
   break: function (_this, scope, command) {
     scope.break = true;
   },
+  continue: function (_this, scope, command) {
+    scope.continue = true;
+  },
   for: function (_this, scope, command) {
     command.init && _this.runCommand(scope, command.init);
     for (;_this.getVariableValue(scope, command.test);_this.getVariableValue(scope, command.update)) {
+      delete scope.continue;
       _this.runCommand(scope, command.body);
       if (scope.break == true) {
         delete scope.break;
@@ -303,6 +307,7 @@ Interpreter.prototype.commands = {
   },
   while: function (_this, scope, command) {
     while (_this.getVariableValue(scope, command.test)) {
+      delete scope.continue;
       _this.runCommand(scope, command.body);
       if (scope.break == true) {
         delete scope.break;
@@ -312,6 +317,7 @@ Interpreter.prototype.commands = {
   },
   do: function (_this, scope, command) {
     do {
+      delete scope.continue;
       _this.runCommand(scope, command.body);
       if (scope.break == true) {
         delete scope.break;
@@ -422,7 +428,7 @@ Interpreter.prototype.execScript = function (localScope, script) {
     } else {
       result = _this.runCommand(localScope, command);
     }
-    if (len === index || localScope.return === true || localScope.break === true) {
+    if (len === index || localScope.return === true || localScope.break === true || localScope.continue === true) {
       return result;
     } else {
       return next();
