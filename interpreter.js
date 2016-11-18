@@ -249,7 +249,7 @@ Interpreter.prototype.commands = {
     var args = _this.buildArgs(scope, command.params);
 
     if (typeof fn !== 'function') {
-      throw new Error('Call ' + JSON.stringify(callee) + ' is not a function!');
+      throw new Error('Call ' + JSON.stringify(command.callee) + ' is not a function!');
     }
 
     if (command.isNew) {
