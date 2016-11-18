@@ -7,13 +7,13 @@ var UglifyJS = require("uglify-js");
 
 var getAst = function () {
   var code = function () {
-    for (var i = 0; i < 10; i++) {
-      console.log(i);
-      if(i>5){
-        continue;
+    var Fn = function (a) {
+      this.fn = function (b) {
+        console.log('hi!', a, b)
       }
-      console.log('l', i);
-    }
+    };
+    var fn = new Fn('varA');
+    console.log(fn.fn('varB'));
   };
   code = code.toString();
   code = code.substr(code.indexOf('{') + 1);
