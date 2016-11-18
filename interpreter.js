@@ -352,10 +352,11 @@ Interpreter.prototype.commands = {
     }
   },
   for: function (_this, scope, command) {
+    var result;
     command.init && _this.runCommand(scope, command.init);
     for (;_this.getVariableValue(scope, command.test);_this.getVariableValue(scope, command.update)) {
       delete scope.continue;
-      _this.runCommand(scope, command.body);
+      result = _this.runCommand(scope, command.body);
       if (
         (scope.hasOwnProperty('break') && scope.break == true) ||
         (scope.hasOwnProperty('return') && scope.return == true)
@@ -364,8 +365,10 @@ Interpreter.prototype.commands = {
         break;
       }
     }
+    return result;
   },
   forIn: function (_this, scope, command) {
+    var result;
     var objProp = _this.getObjectProperty(scope, command.left);
     var property = objProp.property;
     var object = objProp.object;
@@ -380,7 +383,7 @@ Interpreter.prototype.commands = {
     for (var key in obj) {
       delete scope.continue;
       object[property] = key;
-      _this.runCommand(scope, command.body);
+      result = _this.runCommand(scope, command.body);
       if (
         (scope.hasOwnProperty('break') && scope.break == true) ||
         (scope.hasOwnProperty('return') && scope.return == true)
@@ -389,11 +392,13 @@ Interpreter.prototype.commands = {
         break;
       }
     }
+    return result;
   },
   while: function (_this, scope, command) {
+    var result;
     while (_this.getVariableValue(scope, command.test)) {
       delete scope.continue;
-      _this.runCommand(scope, command.body);
+      result = _this.runCommand(scope, command.body);
       if (
         (scope.hasOwnProperty('break') && scope.break == true) ||
         (scope.hasOwnProperty('return') && scope.return == true)
@@ -402,11 +407,13 @@ Interpreter.prototype.commands = {
         break;
       }
     }
+    return result;
   },
   do: function (_this, scope, command) {
+    var result;
     do {
       delete scope.continue;
-      _this.runCommand(scope, command.body);
+      result = _this.runCommand(scope, command.body);
       if (
         (scope.hasOwnProperty('break') && scope.break == true) ||
         (scope.hasOwnProperty('return') && scope.return == true)
@@ -415,6 +422,7 @@ Interpreter.prototype.commands = {
         break;
       }
     } while (_this.getVariableValue(scope, command.test));
+    return result;
   },
   throw: function (_this, scope, command) {
     throw _this.getVariableValue(scope, command.value);
