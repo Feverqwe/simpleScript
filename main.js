@@ -2,111 +2,38 @@
  * Created by Anton on 17.11.2016.
  */
 var Interpreter = require('./interpreter');
+var ScriptToJson = require('./scriptToJson');
+var uglifyJs = require("uglify-js");
 
-var myScript = [
-  {
-    "type": "var",
-    "values": [
-      {
-        "key": "Fn",
-        "value": {
-          "type": "function",
-          "params": [
-            "n"
-          ],
-          "body": {
-            "type": "statement",
-            "body": [
-              {
-                "type": "=",
-                "left": {
-                  "type": "member",
-                  "object": "this",
-                  "property": "fn"
-                },
-                "right": {
-                  "type": "function",
-                  "params": [
-                    "o"
-                  ],
-                  "body": {
-                    "type": "statement",
-                    "body": [
-                      {
-                        "type": "call",
-                        "callee": {
-                          "type": "member",
-                          "object": "console",
-                          "property": "log"
-                        },
-                        "params": [
-                          {
-                            "type": "raw",
-                            "data": "hi!"
-                          },
-                          "n",
-                          "o"
-                        ]
-                      }
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        }
-      },
-      {
-        "key": "fn",
-        "value": {
-          "type": "call",
-          "isNew": true,
-          "callee": "Fn",
-          "params": [
-            {
-              "type": "raw",
-              "data": "varA"
-            }
-          ]
-        }
-      }
-    ]
-  },
-  {
-    "type": "call",
-    "callee": {
-      "type": "member",
-      "object": "console",
-      "property": "log"
-    },
-    "params": [
-      {
-        "type": "call",
-        "callee": {
-          "type": "member",
-          "object": "fn",
-          "property": "fn"
-        },
-        "params": [
-          {
-            "type": "raw",
-            "data": "varB"
-          }
-        ]
-      }
-    ]
-  }
-];
+var myScript = function () {
+  console.log('hello!');
+};
+
+var stripFn = function (code) {
+  code = code.toString();
+  code = code.substr(code.indexOf('{') + 1);
+  code = code.substr(0, code.lastIndexOf('}'));
+  code = uglifyJs.minify(code, {fromString: true}).code;
+
+  return code;
+};
 
 (function () {
   var interpreter = new Interpreter({
     console: console
   });
-  return Promise.resolve().then(function () {
-    return interpreter.runScript(myScript);
-  }).then(function () {
-    console.log('result', arguments);
-  }, function (err) {
-    console.error(err.stack || err);
-  });
+
+  var scriptToJson = new ScriptToJson();
+
+  var jsScript = stripFn(myScript);
+
+  console.time('jsScript');
+  (new Function([], jsScript))();
+  console.timeEnd('jsScript');
+
+  var jsonScript = scriptToJson.getJson(jsScript);
+
+  console.time('jsonScript');
+  interpreter.runScript(jsonScript);
+  console.timeEnd('jsonScript');
 })();

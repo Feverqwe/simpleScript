@@ -2,28 +2,6 @@
  * Created by Anton on 16.11.2016.
  */
 var acorn = require('acorn');
-var Interpreter = require('./interpreter');
-var UglifyJS = require("uglify-js");
-
-var getAst = function () {
-  var code = function () {
-    var Fn = function (a) {
-      this.fn = function (b) {
-        console.log('hi!', a, b)
-      }
-    };
-    var fn = new Fn('varA');
-    console.log(fn.fn('varB'));
-  };
-  code = code.toString();
-  code = code.substr(code.indexOf('{') + 1);
-  code = code.substr(0, code.lastIndexOf('}'));
-  code = UglifyJS.minify(code, {fromString: true}).code;
-
-  console.log('Code', code);
-
-  return acorn.parse(code);
-};
 
 var paramsToArray = function (params) {
   return params.map(function (item) {
@@ -338,25 +316,14 @@ var astToJson = function (ast) {
   });
 };
 
-(function () {
-  var ast = getAst();
-  var interpreter = new Interpreter({
-    RegExp: RegExp,
-    JSON: JSON,
-    parseInt: parseInt,
-    Date: Date,
-    console: console
-  });
+var ScriptToJson = function () {
 
-  ast = JSON.parse(JSON.stringify(ast));
-  console.log('ast', JSON.stringify(ast));
+};
 
+ScriptToJson.prototype.getJson = function (code) {
+  var ast = acorn.parse(code);
   var jsonScript = astToJson(ast);
-  console.log('jsonScript', JSON.stringify(jsonScript));
+  return JSON.parse(JSON.stringify(jsonScript));
+};
 
-  console.time('jsonScript');
-  var result = interpreter.runScript(jsonScript);
-  console.timeEnd('jsonScript');
-
-  console.log('result', result);
-})();
+module.exports = ScriptToJson;
