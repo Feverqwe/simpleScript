@@ -508,7 +508,7 @@ Interpreter.prototype.commands = {
  */
 Interpreter.prototype.runCommand = function (scope, command) {
   var _this = this;
-  if (typeof command === 'string') {
+  if (typeof command !== 'object') {
     return _this.getVariableValue(scope, command);
   } else {
     var type = command.type;
