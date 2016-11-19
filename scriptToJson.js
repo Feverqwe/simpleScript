@@ -193,7 +193,11 @@ var types = {
     return {
       type: '[]',
       values: item.elements.map(function (item) {
-        return parseSection(item);
+        if (item === null) {
+          return undefined;
+        } else {
+          return parseSection(item);
+        }
       })
     }
   },
