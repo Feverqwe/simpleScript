@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "acorn": "",
+    "mocha": "^3.1.2",
     "uglify-js": ""
   }
 }

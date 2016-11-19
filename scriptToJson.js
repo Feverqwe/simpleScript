@@ -363,14 +363,16 @@ var astToJson = function (ast) {
   });
 };
 
-var ScriptToJson = function () {
-
+var ScriptToJson = function (options) {
+  this.options = options || {};
 };
 
 ScriptToJson.prototype.getJson = function (code) {
   var ast = acorn.parse(code);
 
-  console.log('ast', JSON.stringify(ast));
+  if (this.options.debug) {
+    console.log('ast', JSON.stringify(ast));
+  }
 
   var jsonScript = astToJson(ast);
   return JSON.parse(JSON.stringify(jsonScript));
