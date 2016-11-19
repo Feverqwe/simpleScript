@@ -438,7 +438,9 @@ Interpreter.prototype.commands = {
       }
     } finally {
       if (command.finally) {
-        _this.runCommand(scope, command.finally);
+        // note: try finally, result in chrome 54, firefox 50 not replaced
+        // in node 4x and edge 38 replaced
+        /*result = */_this.runCommand(scope, command.finally);
       }
     }
     return result;
