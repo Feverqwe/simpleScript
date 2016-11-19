@@ -219,9 +219,12 @@ var types = {
     var obj = {
       type: 'try',
       block: parseSection(item.block),
-      catch: parseSection(item.handler.body),
-      finally: parseSection(item.finalizer)
+      catch: parseSection(item.handler.body)
     };
+
+    if (item.finalizer) {
+      obj.finally = parseSection(item.finalizer);
+    }
 
     obj.params = [item.handler.param.name];
 
@@ -304,7 +307,7 @@ var types = {
 
 var parseSection = function (item) {
   if (item === null) {
-    console.log('emptySection', item);
+    console.trace('emptySection', item);
     return;
   }
 
