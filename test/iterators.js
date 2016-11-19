@@ -131,7 +131,19 @@ module.exports = function (env) {
       var jsonResult = getJsonResult(code);
       assert.equal('b', jsResult, jsonResult);
     });
-    it('switch', function() {
+    it('throw', function() {
+      var code = getCode(function () {
+        try {
+          throw "err"
+        } catch(e) {
+          e
+        }
+      });
+      var jsResult = getJsResult(code);
+      var jsonResult = getJsonResult(code);
+      assert.equal('err', jsResult, jsonResult);
+    });
+    it('tryCatch', function() {
       var code = getCode(function () {
         try {
           var i = "something"
@@ -149,6 +161,32 @@ module.exports = function (env) {
         jsonResult = true;
       }
       assert.equal(true, jsResult, jsonResult);
+    });
+    it('var', function() {
+      var code = getCode(function () {
+        var a = 0;
+        (function () {
+          var a = 1;
+        })();
+        a;
+      });
+      var jsResult = getJsResult(code);
+      var jsonResult = getJsonResult(code);
+      assert.equal(0, jsResult, jsonResult);
+    });
+    it('while', function() {
+      var code = getCode(function () {
+        var n = 0
+        var x = 0
+        while (n < 3) {
+          n ++;
+          x += n;
+        }
+        n + ',' + x
+      });
+      var jsResult = getJsResult(code);
+      var jsonResult = getJsonResult(code);
+      assert.equal('3,6', jsResult, jsonResult);
     });
 
   });

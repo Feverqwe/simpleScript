@@ -30,7 +30,9 @@ var stripFn = function (code) {
     parseInt: parseInt
   });
 
-  var scriptToJson = new ScriptToJson();
+  var scriptToJson = new ScriptToJson({
+    debug: true
+  });
 
   var jsScript = stripFn(myScript);
   console.log('jsScript', jsScript);
