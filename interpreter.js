@@ -129,7 +129,7 @@ Interpreter.prototype.extendScope = function (customScope) {
 Interpreter.prototype.getVariableScope = function (scope, variable) {
   var _this = this;
   while (!scope.hasOwnProperty(variable)) {
-    scope = scope.prototype;
+    scope = scope.__parent__;
     if (scope === undefined) {
       break;
     }
@@ -182,7 +182,7 @@ Interpreter.prototype.getLocalScope = function (scope, context, args, callArgs) 
   args = args || [];
 
   var localScope = Object.create(scope);
-  localScope.prototype = scope;
+  localScope.__parent__ = scope;
   localScope['arguments'] = callArgs;
   localScope.this = context;
 
