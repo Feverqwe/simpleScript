@@ -227,7 +227,10 @@ Interpreter.prototype.getObjectProperty = function (scope, variable) {
   return {object: object, noObject: noObject, property: property};
 };
 
-var SkipResult = {};
+/**
+ * @private
+ */
+Interpreter.prototype.SkipResult = {};
 
 /**
  * @private
@@ -240,7 +243,7 @@ Interpreter.prototype.commands = {
       key = _this.getPropValue(scope, item.key);
       scope[key] = item.value && _this.getVariableValue(scope, item.value);
     }
-    return SkipResult;
+    return _this.SkipResult;
   },
   call: function (_this, scope, command) {
     var result;
@@ -339,11 +342,11 @@ Interpreter.prototype.commands = {
   },
   break: function (_this, scope, command) {
     scope.break = true;
-    return SkipResult;
+    return _this.SkipResult;
   },
   continue: function (_this, scope, command) {
     scope.continue = true;
-    return SkipResult;
+    return _this.SkipResult;
   },
   raw: function (_this, scope, command) {
     return command.data;
@@ -352,7 +355,7 @@ Interpreter.prototype.commands = {
     return function () {
       var localScope = _this.getLocalScope(scope, this, command.params, [].slice.call(arguments));
       var result = _this.runCommand(localScope, command.body);
-      if (result === SkipResult) {
+      if (result === _this.SkipResult) {
         result = undefined;
       }
       if (localScope.hasOwnProperty('return') && localScope.return === true) {
@@ -361,10 +364,10 @@ Interpreter.prototype.commands = {
     };
   },
   statement: function (_this, scope, command) {
-    return _this.execScript(scope, command.body, SkipResult);
+    return _this.execScript(scope, command.body, _this.SkipResult);
   },
   if: function (_this, scope, command) {
-    var result = SkipResult;
+    var result = _this.SkipResult;
     if (_this.getVariableValue(scope, command.test)) {
       result = _this.runCommand(scope, command.then);
     } else
@@ -374,12 +377,12 @@ Interpreter.prototype.commands = {
     return result;
   },
   for: function (_this, scope, command) {
-    var result = SkipResult, prevResult;
+    var result = _this.SkipResult, prevResult;
     command.init && _this.runCommand(scope, command.init);
     for (;_this.getVariableValue(scope, command.test);_this.getVariableValue(scope, command.update)) {
       prevResult = result;
       result = _this.runCommand(scope, command.body);
-      if (result === SkipResult) {
+      if (result === _this.SkipResult) {
         result = prevResult;
       }
       if (scope.hasOwnProperty('continue') && scope.continue === true) {
@@ -397,7 +400,7 @@ Interpreter.prototype.commands = {
     return result;
   },
   forIn: function (_this, scope, command) {
-    var result = SkipResult, prevResult;
+    var result = _this.SkipResult, prevResult;
     var objProp = _this.getObjectProperty(scope, command.left);
     var property = objProp.property;
     var object = objProp.object;
@@ -413,7 +416,7 @@ Interpreter.prototype.commands = {
       object[property] = key;
       prevResult = result;
       result = _this.runCommand(scope, command.body);
-      if (result === SkipResult) {
+      if (result === _this.SkipResult) {
         result = prevResult;
       }
       if (scope.hasOwnProperty('continue') && scope.continue === true) {
@@ -431,11 +434,11 @@ Interpreter.prototype.commands = {
     return result;
   },
   while: function (_this, scope, command) {
-    var result = SkipResult, prevResult;
+    var result = _this.SkipResult, prevResult;
     while (_this.getVariableValue(scope, command.test)) {
       prevResult = result;
       result = _this.runCommand(scope, command.body);
-      if (result === SkipResult) {
+      if (result === _this.SkipResult) {
         result = prevResult;
       }
       if (scope.hasOwnProperty('continue') && scope.continue === true) {
@@ -453,11 +456,11 @@ Interpreter.prototype.commands = {
     return result;
   },
   do: function (_this, scope, command) {
-    var result = SkipResult, prevResult;
+    var result = _this.SkipResult, prevResult;
     do {
       prevResult = result;
       result = _this.runCommand(scope, command.body);
-      if (result === SkipResult) {
+      if (result === _this.SkipResult) {
         result = prevResult;
       }
       if (scope.hasOwnProperty('continue') && scope.continue === true) {
@@ -478,7 +481,7 @@ Interpreter.prototype.commands = {
     throw _this.getVariableValue(scope, command.value);
   },
   try: function (_this, scope, command) {
-    var result = SkipResult;
+    var result = _this.SkipResult;
     try {
       result = _this.runCommand(scope, command.block);
     } catch (err) {
@@ -526,7 +529,7 @@ Interpreter.prototype.execScript = function (localScope, script, result) {
     command = script[i];
     prevResult = result;
     result = _this.runCommand(localScope, command);
-    if (result === SkipResult) {
+    if (result === _this.SkipResult) {
       result = prevResult;
     }
     if (
