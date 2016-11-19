@@ -219,7 +219,8 @@ var types = {
     var obj = {
       type: 'try',
       block: parseSection(item.block),
-      catch: parseSection(item.handler.body)
+      catch: parseSection(item.handler.body),
+      finally: parseSection(item.finalizer)
     };
 
     obj.params = [item.handler.param.name];

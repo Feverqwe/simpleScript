@@ -436,6 +436,10 @@ Interpreter.prototype.commands = {
         var localScope = _this.getLocalScope(scope, this, command.params, [err]);
         result = _this.runCommand(localScope, command.catch);
       }
+    } finally {
+      if (command.finally) {
+        _this.runCommand(scope, command.finally);
+      }
     }
     return result;
   },
