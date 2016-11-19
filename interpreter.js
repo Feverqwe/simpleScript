@@ -344,6 +344,9 @@ Interpreter.prototype.commands = {
     return function () {
       var localScope = _this.getLocalScope(scope, this, command.params, [].slice.call(arguments));
       var result = _this.runCommand(localScope, command.body);
+      if (result === SkipResult) {
+        result = undefined;
+      }
       if (localScope.hasOwnProperty('return') && localScope.return === true) {
         return result;
       }
