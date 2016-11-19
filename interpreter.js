@@ -513,32 +513,23 @@ Interpreter.prototype.runCommand = function (scope, command) {
  */
 Interpreter.prototype.execScript = function (localScope, script, result) {
   var _this = this;
-  var index = 0;
-  var len = script.length;
-  if (len === 0) {
-    return result;
-  }
-
-  var prevResult;
-  var next = function () {
-    var command = script[index++];
+  var prevResult, command;
+  for (var i = 0, len = script.length; i < len; i++) {
+    command = script[i];
     prevResult = result;
     result = _this.runCommand(localScope, command);
     if (result === SkipResult) {
       result = prevResult;
     }
     if (
-      len === index ||
       (localScope.hasOwnProperty('return') && localScope.return === true) ||
       (localScope.hasOwnProperty('break') && localScope.break === true) ||
       (localScope.hasOwnProperty('continue') && localScope.continue === true)
     ) {
-      return result;
-    } else {
-      return next();
+      break;
     }
-  };
-  return next();
+  }
+  return result;
 };
 
 Interpreter.prototype.runScript = function (script) {
