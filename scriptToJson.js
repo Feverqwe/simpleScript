@@ -256,7 +256,7 @@ var types = {
       block: parseSection(item.block)
     };
 
-    if (item.handler.body.length) {
+    if (item.handler.body.body.length) {
       obj.params = [item.handler.param.name];
       obj.catch = parseSection(item.handler.body);
     }
