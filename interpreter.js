@@ -42,7 +42,6 @@ Interpreter.prototype.initOperators = function () {
     '===': function (a,b) {return a===b},
     '!=': function (a,b) {return a!=b},
     '!==': function (a,b) {return a!==b},
-
     '&': function (a,b) {return a&b},
     '|': function (a,b) {return a|b},
     '^': function (a,b) {return a^b},
@@ -379,7 +378,19 @@ Interpreter.prototype.commands = {
   for: function (_this, scope, command) {
     var result = _this.SkipResult, prevResult;
     command.init && _this.runCommand(scope, command.init);
-    for (;_this.getVariableValue(scope, command.test);_this.getVariableValue(scope, command.update)) {
+    var test = function () {
+      if (command.test) {
+        return _this.getVariableValue(scope, command.test);
+      } else {
+        return true;
+      }
+    };
+    var update = function () {
+      if (command.update) {
+        return _this.getVariableValue(scope, command.update);
+      }
+    };
+    for (;test();update()) {
       prevResult = result;
       result = _this.runCommand(scope, command.body);
       if (result === _this.SkipResult) {
@@ -435,7 +446,14 @@ Interpreter.prototype.commands = {
   },
   while: function (_this, scope, command) {
     var result = _this.SkipResult, prevResult;
-    while (_this.getVariableValue(scope, command.test)) {
+    var test = function () {
+      if (command.test) {
+        return _this.getVariableValue(scope, command.test);
+      } else {
+        return true;
+      }
+    };
+    while (test()) {
       prevResult = result;
       result = _this.runCommand(scope, command.body);
       if (result === _this.SkipResult) {
@@ -457,6 +475,13 @@ Interpreter.prototype.commands = {
   },
   do: function (_this, scope, command) {
     var result = _this.SkipResult, prevResult;
+    var test = function () {
+      if (command.test) {
+        return _this.getVariableValue(scope, command.test);
+      } else {
+        return true;
+      }
+    };
     do {
       prevResult = result;
       result = _this.runCommand(scope, command.body);
@@ -474,7 +499,7 @@ Interpreter.prototype.commands = {
       if (scope.hasOwnProperty('return') && scope.return === true) {
         return result;
       }
-    } while (_this.getVariableValue(scope, command.test));
+    } while (test());
     return result;
   },
   throw: function (_this, scope, command) {
