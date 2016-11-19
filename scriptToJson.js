@@ -29,20 +29,28 @@ var types = {
     return item.name;
   },
   FunctionExpression: function (item) {
+    var params = item.params.map(function (item) {
+      return parseSection(item);
+    });
+    if (!params.length) {
+      params = undefined;
+    }
     return {
       type: 'function',
-      params: item.params.map(function (item) {
-        return parseSection(item);
-      }),
+      params: params,
       body: parseSection(item.body)
     };
   },
   FunctionDeclaration: function (item) {
+    var params = item.params.map(function (item) {
+      return parseSection(item);
+    });
+    if (!params.length) {
+      params = undefined;
+    }
     var value = {
       type: 'function',
-      params: item.params.map(function (item) {
-        return parseSection(item);
-      }),
+      params: params,
       body: parseSection(item.body)
     };
 
@@ -111,12 +119,16 @@ var types = {
     return parseSection(item.expression);
   },
   CallExpression: function (item) {
+    var params = item.arguments.map(function (item) {
+      return parseSection(item);
+    });
+    if (!params.length) {
+      params = undefined;
+    }
     return {
       type: 'call',
       callee: parseSection(item.callee),
-      params: item.arguments.map(function (item) {
-        return parseSection(item);
-      })
+      params: params
     };
   },
   MemberExpression: function (item) {
@@ -128,13 +140,17 @@ var types = {
     };
   },
   NewExpression: function (item) {
+    var params = item.arguments.map(function (item) {
+      return parseSection(item);
+    });
+    if (!params.length) {
+      params = undefined;
+    }
     return {
       type: 'call',
       isNew: true,
       callee: parseSection(item.callee),
-      params: item.arguments.map(function (item) {
-        return parseSection(item);
-      })
+      params: params
     }
   },
   AssignmentExpression: function (item) {
@@ -180,26 +196,34 @@ var types = {
     }
   },
   ObjectExpression: function (item) {
+    var properties = item.properties.map(function (item) {
+      return [
+        parseSection(item.key),
+        parseSection(item.value)
+      ];
+    });
+    if (!properties.length) {
+      properties = undefined;
+    }
     return {
       type: '{}',
-      properties: item.properties.map(function (item) {
-        return [
-          parseSection(item.key),
-          parseSection(item.value)
-        ];
-      })
+      properties: properties
     }
   },
   ArrayExpression: function (item) {
+    var values = item.elements.map(function (item) {
+      if (item === null) {
+        return undefined;
+      } else {
+        return parseSection(item);
+      }
+    });
+    if (!values.length) {
+      values = undefined;
+    }
     return {
       type: '[]',
-      values: item.elements.map(function (item) {
-        if (item === null) {
-          return undefined;
-        } else {
-          return parseSection(item);
-        }
-      })
+      values: values
     }
   },
   UnaryExpression: function (item) {

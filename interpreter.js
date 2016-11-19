@@ -155,10 +155,11 @@ Interpreter.prototype.getPropValue = function (scope, variable) {
 Interpreter.prototype.buildArgs = function (scope, args) {
   var _this = this;
   args = args || [];
-  var fnArgs = new Array(args.length);
-  args.forEach(function (variable, i) {
-    fnArgs[i] = _this.getVariableValue(scope, variable);
-  });
+  var len = args.length;
+  var fnArgs = new Array(len);
+  for (var i = 0; i < len; i++) {
+    fnArgs[i] = _this.getVariableValue(scope, args[i]);
+  }
   return fnArgs;
 };
 
@@ -179,16 +180,17 @@ Interpreter.prototype.getVariableValue = function (scope, variable) {
  */
 Interpreter.prototype.getLocalScope = function (scope, context, args, callArgs) {
   callArgs = callArgs || [];
-  args = args || [];
 
   var localScope = Object.create(scope);
   localScope.__parent__ = scope;
   localScope['arguments'] = callArgs;
   localScope.this = context;
 
-  args.forEach(function (varible, index) {
-    localScope[varible] = callArgs[index];
-  });
+  if (args) {
+    for (var i = 0, len = args.length; i < len; i++) {
+      localScope[args[i]] = callArgs[i];
+    }
+  }
 
   return localScope;
 };
@@ -288,17 +290,23 @@ Interpreter.prototype.commands = {
   },
   '{}': function (_this, scope, command) {
     var obj = {};
-    command.properties.forEach(function (keyValue) {
-      var key = _this.getPropValue(scope, keyValue[0]);
-      obj[key] = _this.getVariableValue(scope, keyValue[1]);
-    });
+    var keyValue;
+    var properties = command.properties;
+    if (properties) {
+      for (var i = 0, len = properties.length; i < len; i++) {
+        keyValue = properties[i];
+        obj[_this.getPropValue(scope, keyValue[0])] = _this.getVariableValue(scope, keyValue[1]);
+      }
+    }
     return obj;
   },
   '[]': function (_this, scope, command) {
-    var arr = new Array(command.values.length);
-    command.values.forEach(function (value, i) {
-      arr[i] = _this.getVariableValue(scope, value);
-    });
+    var values = command.values || [];
+    var len = values.length;
+    var arr = new Array(len);
+    for (var i = 0; i < len; i++) {
+      arr[i] = _this.getVariableValue(scope, values[i]);
+    }
     return arr;
   },
   '=': function (_this, scope, command) {
