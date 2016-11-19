@@ -6,13 +6,7 @@ var ScriptToJson = require('./scriptToJson');
 var uglifyJs = require("uglify-js");
 
 var myScript = function () {
-
-  // for (var text_index = 0; text_index < 50000; text_index++) {
-
-  console.log('hi');
-
-  // }
-
+  1;
 };
 
 var stripFn = function (code) {
@@ -32,7 +26,8 @@ var stripFn = function (code) {
     Object: Object,
     Array: Array,
     Math: Math,
-    RegExp: RegExp
+    RegExp: RegExp,
+    parseInt: parseInt
   });
 
   var scriptToJson = new ScriptToJson();
@@ -43,7 +38,7 @@ var stripFn = function (code) {
   console.time('jsScript');
   var result;
   try {
-    result = (new Function([], jsScript))();
+    result = eval(jsScript);
   } catch (e) {
     console.error('jsScript', e.stack || e);
   }
