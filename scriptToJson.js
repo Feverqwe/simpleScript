@@ -49,6 +49,7 @@ var types = {
     if (item.id) {
       value = {
         type: 'var',
+        // functionDeclaration: true,
         values: [
           {key: parseSection(item.id, item), value: value}
         ]
