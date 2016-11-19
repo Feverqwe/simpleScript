@@ -92,7 +92,13 @@ var types = {
     }
   },
   ReturnStatement: function (item) {
-    return {type: 'return', value: parseSection(item.argument)};
+    var obj;
+    if (item.argument === null) {
+      obj = {type: 'return'};
+    } else {
+      obj = {type: 'return', value: parseSection(item.argument)};
+    }
+    return obj;
   },
   BinaryExpression: function (item) {
     return {
