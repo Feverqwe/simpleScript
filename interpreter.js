@@ -225,6 +225,8 @@ Interpreter.prototype.getObjectProperty = function (scope, variable) {
   return {object: object, noObject: noObject, property: property};
 };
 
+var SkipResult = {};
+
 /**
  * @private
  */
@@ -236,8 +238,10 @@ Interpreter.prototype.commands = {
       key = _this.getPropValue(scope, item.key);
       scope[key] = item.value && _this.getVariableValue(scope, item.value);
     }
+    return SkipResult;
   },
   call: function (_this, scope, command) {
+    var result;
     var objProp = _this.getObjectProperty(scope, command.callee);
     var property = objProp.property;
     var object = objProp.object;
@@ -258,18 +262,19 @@ Interpreter.prototype.commands = {
     if (command.isNew) {
       if (noObject) {
         args.unshift(_this.scope);
-        return new (Function.prototype.bind.apply(fn, args));
+        result = new (Function.prototype.bind.apply(fn, args));
       } else {
         args.unshift(fn);
-        return new (Function.prototype.bind.apply(fn, args));
+        result = new (Function.prototype.bind.apply(fn, args));
       }
     } else {
       if (noObject) {
-        return fn.apply(_this.scope, args);
+        result = fn.apply(_this.scope, args);
       } else {
-        return fn.apply(object, args);
+        result = fn.apply(object, args);
       }
     }
+    return result;
   },
   member: function (_this, scope, command) {
     var object = _this.getVariableValue(scope, command.object);
@@ -297,13 +302,15 @@ Interpreter.prototype.commands = {
     return arr;
   },
   '=': function (_this, scope, command) {
+    var result;
     var objProp = _this.getObjectProperty(scope, command.left);
     var value = _this.getVariableValue(scope, command.right);
     if (objProp.noObject) {
-      return value;
+      result = value;
     } else {
-      return objProp.object[objProp.property] = value;
+      result = objProp.object[objProp.property] = value;
     }
+    return result;
   },
   delete: function (_this, scope, command) {
     var objProp = _this.getObjectProperty(scope, command.value);
@@ -324,9 +331,11 @@ Interpreter.prototype.commands = {
   },
   break: function (_this, scope, command) {
     scope.break = true;
+    return SkipResult;
   },
   continue: function (_this, scope, command) {
     scope.continue = true;
+    return SkipResult;
   },
   raw: function (_this, scope, command) {
     return command.data;
@@ -341,34 +350,43 @@ Interpreter.prototype.commands = {
     };
   },
   statement: function (_this, scope, command) {
-    return _this.execScript(scope, command.body);
+    return _this.execScript(scope, command.body, SkipResult);
   },
   if: function (_this, scope, command) {
-    var result = _this.getVariableValue(scope, command.test);
-    if (result) {
-      return command.then && _this.runCommand(scope, command.then);
-    } else {
-      return command.else && _this.runCommand(scope, command.else);
+    var result = SkipResult;
+    if (_this.getVariableValue(scope, command.test)) {
+      result = _this.runCommand(scope, command.then);
+    } else
+    if (command.else) {
+      result = _this.runCommand(scope, command.else);
     }
+    return result;
   },
   for: function (_this, scope, command) {
-    var result;
+    var result = SkipResult, prevResult;
     command.init && _this.runCommand(scope, command.init);
     for (;_this.getVariableValue(scope, command.test);_this.getVariableValue(scope, command.update)) {
-      delete scope.continue;
+      prevResult = result;
       result = _this.runCommand(scope, command.body);
-      if (
-        (scope.hasOwnProperty('break') && scope.break == true) ||
-        (scope.hasOwnProperty('return') && scope.return == true)
-      ) {
+      if (result === SkipResult) {
+        result = prevResult;
+      }
+      if (scope.hasOwnProperty('continue') && scope.continue === true) {
+        delete scope.continue;
+        continue;
+      }
+      if (scope.hasOwnProperty('break') && scope.break === true) {
         delete scope.break;
         break;
+      }
+      if (scope.hasOwnProperty('return') && scope.return === true) {
+        return result;
       }
     }
     return result;
   },
   forIn: function (_this, scope, command) {
-    var result;
+    var result = SkipResult, prevResult;
     var objProp = _this.getObjectProperty(scope, command.left);
     var property = objProp.property;
     var object = objProp.object;
@@ -381,45 +399,66 @@ Interpreter.prototype.commands = {
     var obj = _this.getVariableValue(scope, command.right);
 
     for (var key in obj) {
-      delete scope.continue;
       object[property] = key;
+      prevResult = result;
       result = _this.runCommand(scope, command.body);
-      if (
-        (scope.hasOwnProperty('break') && scope.break == true) ||
-        (scope.hasOwnProperty('return') && scope.return == true)
-      ) {
+      if (result === SkipResult) {
+        result = prevResult;
+      }
+      if (scope.hasOwnProperty('continue') && scope.continue === true) {
+        delete scope.continue;
+        continue;
+      }
+      if (scope.hasOwnProperty('break') && scope.break === true) {
         delete scope.break;
         break;
+      }
+      if (scope.hasOwnProperty('return') && scope.return === true) {
+        return result;
       }
     }
     return result;
   },
   while: function (_this, scope, command) {
-    var result;
+    var result = SkipResult, prevResult;
     while (_this.getVariableValue(scope, command.test)) {
-      delete scope.continue;
+      prevResult = result;
       result = _this.runCommand(scope, command.body);
-      if (
-        (scope.hasOwnProperty('break') && scope.break == true) ||
-        (scope.hasOwnProperty('return') && scope.return == true)
-      ) {
+      if (result === SkipResult) {
+        result = prevResult;
+      }
+      if (scope.hasOwnProperty('continue') && scope.continue === true) {
+        delete scope.continue;
+        continue;
+      }
+      if (scope.hasOwnProperty('break') && scope.break === true) {
         delete scope.break;
         break;
+      }
+      if (scope.hasOwnProperty('return') && scope.return === true) {
+        return result;
       }
     }
     return result;
   },
   do: function (_this, scope, command) {
-    var result;
+    var result = SkipResult, prevResult;
     do {
-      delete scope.continue;
+      prevResult = result;
       result = _this.runCommand(scope, command.body);
-      if (
-        (scope.hasOwnProperty('break') && scope.break == true) ||
-        (scope.hasOwnProperty('return') && scope.return == true)
-      ) {
+      if (result === SkipResult) {
+        result = prevResult;
+      }
+      if (scope.hasOwnProperty('continue') && scope.continue === true) {
+        delete scope.continue;
+        continue;
+      }
+      if (scope.hasOwnProperty('break') && scope.break === true) {
         delete scope.break;
         break;
+      }
+      if (scope.hasOwnProperty('return') && scope.return === true) {
+        return result;
       }
     } while (_this.getVariableValue(scope, command.test));
     return result;
@@ -428,7 +467,7 @@ Interpreter.prototype.commands = {
     throw _this.getVariableValue(scope, command.value);
   },
   try: function (_this, scope, command) {
-    var result;
+    var result = SkipResult;
     try {
       result = _this.runCommand(scope, command.block);
     } catch (err) {
@@ -469,17 +508,22 @@ Interpreter.prototype.runCommand = function (scope, command) {
 /**
  * @private
  */
-Interpreter.prototype.execScript = function (localScope, script) {
+Interpreter.prototype.execScript = function (localScope, script, result) {
   var _this = this;
   var index = 0;
   var len = script.length;
   if (len === 0) {
-    return;
+    return result;
   }
 
+  var prevResult;
   var next = function () {
     var command = script[index++];
-    var result = _this.runCommand(localScope, command);
+    prevResult = result;
+    result = _this.runCommand(localScope, command);
+    if (result === SkipResult) {
+      result = prevResult;
+    }
     if (
       len === index ||
       (localScope.hasOwnProperty('return') && localScope.return === true) ||
