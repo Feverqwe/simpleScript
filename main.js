@@ -35,6 +35,10 @@ var stripFn = function (code) {
   var jsScript = stripFn(myScript);
   console.log('jsScript', jsScript);
 
+  /*var fs = require('fs');
+  var jsScriptFromFile = fs.readFileSync('./travelBar.js').toString();
+  jsScript = jsScriptFromFile + '\n\n' + jsScript;*/
+
   console.time('jsScript');
   var result;
   try {
