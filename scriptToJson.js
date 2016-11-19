@@ -253,15 +253,17 @@ var types = {
   TryStatement: function (item) {
     var obj = {
       type: 'try',
-      block: parseSection(item.block),
-      catch: parseSection(item.handler.body)
+      block: parseSection(item.block)
     };
+
+    if (item.handler.body.length) {
+      obj.params = [item.handler.param.name];
+      obj.catch = parseSection(item.handler.body);
+    }
 
     if (item.finalizer) {
       obj.finally = parseSection(item.finalizer);
     }
-
-    obj.params = [item.handler.param.name];
 
     return obj;
   },
