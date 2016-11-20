@@ -152,6 +152,12 @@ module.exports = function (env) {
         });
         assert.equal('2', getJsResult(code), getJsonResult(code));
       });
+      it('=', function() {
+        var code = getCode(function () {
+          a = 1;
+        });
+        assert.equal(1, getJsResult(code), getJsonResult(code));
+      });
       it('+=', function() {
         var code = getCode(function () {
           (function () {
