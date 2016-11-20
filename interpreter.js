@@ -226,7 +226,7 @@ Interpreter.prototype.commands = {
     var item, key;
     for (var i = 0, len = command.values.length; i < len; i++) {
       item = command.values[i];
-      key = item.key;
+      key = _this.getObjectProperty(scope, item.key, item.computed);
       scope[key] = item.value && _this.getValue(scope, item.value);
     }
     return _this.SkipResult;
