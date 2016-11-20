@@ -8,167 +8,532 @@ module.exports = function (env) {
   var assert = env.assert;
 
   describe('operators', function() {
-    it('+', function() {
-      var code = getCode(function () {
-        1 + 2;
+
+    describe('arithmetic', function () {
+      it('+', function() {
+        var code = getCode(function () {
+          1 + 2;
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(3, jsResult, jsonResult);
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(3, jsResult, jsonResult);
+      it('-', function() {
+        var code = getCode(function () {
+          1 - 2;
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(-1, jsResult, jsonResult);
+      });
+      it('*', function() {
+        var code = getCode(function () {
+          3 * 2;
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(6, jsResult, jsonResult);
+      });
+      it('/', function() {
+        var code = getCode(function () {
+          3 / 2;
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(1.5, jsResult, jsonResult);
+      });
+      it('%', function() {
+        var code = getCode(function () {
+          7 % 2
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(1, jsResult, jsonResult);
+      });
+
+      describe('++', function () {
+        it('1++', function () {
+          var code = getCode(function () {
+            (function () {
+              var i = 1;
+              return i++;
+            })();
+          });
+          var jsResult = getJsResult(code);
+          var jsonResult = getJsonResult(code);
+          assert.equal(1, jsResult, jsonResult);
+        });
+        it('++1', function () {
+          var code = getCode(function () {
+            (function () {
+              var i = 1;
+              return ++i;
+            })();
+          });
+          var jsResult = getJsResult(code);
+          var jsonResult = getJsonResult(code);
+          assert.equal(2, jsResult, jsonResult);
+        });
+      });
+      describe('--', function () {
+        it('1--', function() {
+          var code = getCode(function () {
+            (function () {
+              var i = 1;
+              return i--;
+            })();
+          });
+          var jsResult = getJsResult(code);
+          var jsonResult = getJsonResult(code);
+          assert.equal(1, jsResult, jsonResult);
+        });
+        it('--1', function() {
+          var code = getCode(function () {
+            (function () {
+              var i = 1;
+              return --i;
+            })();
+          });
+          var jsResult = getJsResult(code);
+          var jsonResult = getJsonResult(code);
+          assert.equal(0, jsResult, jsonResult);
+        });
+      });
     });
-    it('-', function() {
-      var code = getCode(function () {
-        1 - 2;
+    describe('logical', function () {
+      it('1 && 2', function() {
+        var code = getCode(function () {
+          var a = function () {
+            return 1;
+          };
+          var b = function () {
+            return 2;
+          };
+          a() && b();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(2, jsResult, jsonResult);
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(-1, jsResult, jsonResult);
+      it('0 && 2', function() {
+        var code = getCode(function () {
+          var a = function () {
+            return 0;
+          };
+          var b = function () {
+            return 2;
+          };
+          a() && b();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(0, jsResult, jsonResult);
+      });
+      it('0 || 1', function() {
+        var code = getCode(function () {
+          var a = function () {
+            return 0;
+          };
+          var b = function () {
+            return 1;
+          };
+          a() || b();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(1, jsResult, jsonResult);
+      });
+      it('1 || 2', function() {
+        var code = getCode(function () {
+          var a = function () {
+            return 1;
+          };
+          var b = function () {
+            return 2;
+          };
+          a() || b();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(1, jsResult, jsonResult);
+      });
+      it('!0', function() {
+        var code = getCode(function () {
+          !0
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(true, jsResult, jsonResult);
+      });
+      it('!1', function() {
+        var code = getCode(function () {
+          !1
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(false, jsResult, jsonResult);
+      });
     });
-    it('*', function() {
-      var code = getCode(function () {
-        3 * 2;
+    describe('assignment', function () {
+      it('=', function() {
+        var code = getCode(function () {
+         var a = '1';
+         a = '2';
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal('2', jsResult, jsonResult);
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(6, jsResult, jsonResult);
+      it('+=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = 1;
+            return i += 1
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(2, jsResult, jsonResult);
+      });
+      it('-=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = 1;
+            return i -= 1
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(0, jsResult, jsonResult);
+      });
+      it('*=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = 2;
+            return i *= 2
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(4, jsResult, jsonResult);
+      });
+      it('/=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = 2;
+            return i /= 2
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(1, jsResult, jsonResult);
+      });
+      it('>>=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = -9;
+            return i >>= 2
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(-3, jsResult, jsonResult);
+      });
+      it('<<=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = 9;
+            return i <<= 2
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(36, jsResult, jsonResult);
+      });
+      it('>>>=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = -9;
+            return i >>>= 2
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(1073741821, jsResult, jsonResult);
+      });
+      it('&=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = 14;
+            return i &= 9
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(8, jsResult, jsonResult);
+      });
+      it('|=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = 14;
+            return i |= 9
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(15, jsResult, jsonResult);
+      });
+      it('^=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = 14;
+            return i ^= 9
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(7, jsResult, jsonResult);
+      });
+      it('%=', function() {
+        var code = getCode(function () {
+          (function () {
+            var i = 7;
+            return i %= 2
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(1, jsResult, jsonResult);
+      });
     });
-    it('/', function() {
-      var code = getCode(function () {
-        3 / 2;
+    describe('comparison', function () {
+      it('==', function() {
+        var code = getCode(function () {
+          2 == '2'
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(true, jsResult, jsonResult);
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(1.5, jsResult, jsonResult);
+      it('!=', function() {
+        var code = getCode(function () {
+          2 != 2
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(false, jsResult, jsonResult);
+      });
+      it('===', function() {
+        var code = getCode(function () {
+          2 === '2'
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(false, jsResult, jsonResult);
+      });
+      it('!==', function() {
+        var code = getCode(function () {
+          2 !== 3
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(true, jsResult, jsonResult);
+      });
+      it('>', function() {
+        var code = getCode(function () {
+          2 > 1
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(true, jsResult, jsonResult);
+      });
+      it('>=', function() {
+        var code = getCode(function () {
+          2 >= 2
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(true, jsResult, jsonResult);
+      });
+      it('<', function() {
+        var code = getCode(function () {
+          2 < 1
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(false, jsResult, jsonResult);
+      });
+      it('<=', function() {
+        var code = getCode(function () {
+          2 <= 2
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(true, jsResult, jsonResult);
+      });
     });
-    it('%', function() {
-      var code = getCode(function () {
-        7 % 2
+    describe('bitwise', function () {
+      it('&', function() {
+        var code = getCode(function () {
+          14 & 9
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(8, jsResult, jsonResult);
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(1, jsResult, jsonResult);
+      it('|', function() {
+        var code = getCode(function () {
+          14 | 9
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(15, jsResult, jsonResult);
+      });
+      it('^', function() {
+        var code = getCode(function () {
+          14 ^ 9
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(7, jsResult, jsonResult);
+      });
+      it('~', function() {
+        var code = getCode(function () {
+          ~9
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(-10, jsResult, jsonResult);
+      });
+      it('<<', function() {
+        var code = getCode(function () {
+          9 << 2
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(36, jsResult, jsonResult);
+      });
+      it('>>', function() {
+        var code = getCode(function () {
+          -9 >> 2
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(-3, jsResult, jsonResult);
+      });
+      it('>>>', function() {
+        var code = getCode(function () {
+          -9 >>> 2
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(1073741821, jsResult, jsonResult);
+      });
     });
-    it('>', function() {
-      var code = getCode(function () {
-        2 > 1
+    describe('cond', function () {
+      it('if inline', function() {
+        var code = getCode(function () {
+          1?true:false
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(true, jsResult, jsonResult);
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
-    });
-    it('<', function() {
-      var code = getCode(function () {
-        2 < 1
+      it('if', function() {
+        var code = getCode(function () {
+          if (1 - 1) {
+            true
+          } else {
+            false
+          }
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(false, jsResult, jsonResult);
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(false, jsResult, jsonResult);
-    });
-    it('>=', function() {
-      var code = getCode(function () {
-        2 >= 2
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
-    });
-    it('<=', function() {
-      var code = getCode(function () {
-        2 <= 2
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
-    });
-    it('==', function() {
-      var code = getCode(function () {
-        2 == '2'
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
-    });
-    it('===', function() {
-      var code = getCode(function () {
-        2 === '2'
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(false, jsResult, jsonResult);
-    });
-    it('!=', function() {
-      var code = getCode(function () {
-        2 != 2
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(false, jsResult, jsonResult);
-    });
-    it('!==', function() {
-      var code = getCode(function () {
-        2 !== 3
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
-    });
-    it('&', function() {
-      var code = getCode(function () {
-        14 & 9
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(8, jsResult, jsonResult);
-    });
-    it('|', function() {
-      var code = getCode(function () {
-        14 | 9
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(15, jsResult, jsonResult);
-    });
-    it('^', function() {
-      var code = getCode(function () {
-        14 ^ 9
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(7, jsResult, jsonResult);
-    });
-    it('<<', function() {
-      var code = getCode(function () {
-        9 << 2
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(36, jsResult, jsonResult);
-    });
-    it('>>', function() {
-      var code = getCode(function () {
-        -9 >> 2
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(-3, jsResult, jsonResult);
-    });
-    it('>>>', function() {
-      var code = getCode(function () {
-        -9 >>> 2
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(1073741821, jsResult, jsonResult);
     });
 
-    it('typeof', function() {
-      var code = getCode(function () {
-        typeof 1
+    describe('typeof', function() {
+      it('typeof 1', function () {
+        var code = getCode(function () {
+          typeof 1
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal('number', jsResult, jsonResult);
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal('number', jsResult, jsonResult);
+      it('typeof "1"', function () {
+        var code = getCode(function () {
+          typeof "1"
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal('string', jsResult, jsonResult);
+      });
+      it('typeof NaN', function () {
+        var code = getCode(function () {
+          typeof NaN
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal('number', jsResult, jsonResult);
+      });
+      it('typeof Infinity', function () {
+        var code = getCode(function () {
+          typeof Infinity
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal('number', jsResult, jsonResult);
+      });
+      it('typeof undefined', function () {
+        var code = getCode(function () {
+          typeof undefined
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal('undefined', jsResult, jsonResult);
+      });
+      it('typeof null', function () {
+        var code = getCode(function () {
+          typeof null
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal('object', jsResult, jsonResult);
+      });
+      it('typeof false', function () {
+        var code = getCode(function () {
+          typeof false
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal('boolean', jsResult, jsonResult);
+      });
+      it('typeof true', function () {
+        var code = getCode(function () {
+          typeof true
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal('boolean', jsResult, jsonResult);
+      });
     });
+
+    describe('accessors', function () {
+      it('property', function() {
+        var code = getCode(function () {
+          (function () {
+            var obj = {a:{b:{c:true}}};
+            return obj.a.b.c;
+          })();
+        });
+        var jsResult = getJsResult(code);
+        var jsonResult = getJsonResult(code);
+        assert.equal(true, jsResult, jsonResult);
+      });
+    });
+
     it('void', function() {
       var code = getCode(function () {
         void 0
@@ -176,189 +541,6 @@ module.exports = function (env) {
       var jsResult = getJsResult(code);
       var jsonResult = getJsonResult(code);
       assert.equal(undefined, jsResult, jsonResult);
-    });
-    it('!', function() {
-      var code = getCode(function () {
-        !0
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
-    });
-    it('~', function() {
-      var code = getCode(function () {
-        ~9
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(-10, jsResult, jsonResult);
-    });
-
-    it('+=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 1;
-          return i += 1
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(2, jsResult, jsonResult);
-    });
-    it('-=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 1;
-          return i -= 1
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(0, jsResult, jsonResult);
-    });
-    it('*=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 2;
-          return i *= 2
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(4, jsResult, jsonResult);
-    });
-    it('/=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 2;
-          return i /= 2
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(1, jsResult, jsonResult);
-    });
-    it('%=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 7;
-          return i %= 2
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(1, jsResult, jsonResult);
-    });
-    it('<<=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 9;
-          return i <<= 2
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(36, jsResult, jsonResult);
-    });
-    it('>>=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = -9;
-          return i >>= 2
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(-3, jsResult, jsonResult);
-    });
-    it('>>>=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = -9;
-          return i >>>= 2
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(1073741821, jsResult, jsonResult);
-    });
-    it('&=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 14;
-          return i &= 9
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(8, jsResult, jsonResult);
-    });
-    it('^=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 14;
-          return i ^= 9
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(7, jsResult, jsonResult);
-    });
-    it('|=', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 14;
-          return i |= 9
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(15, jsResult, jsonResult);
-    });
-
-    it('1++', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 1;
-          return i++;
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(1, jsResult, jsonResult);
-    });
-    it('++1', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 1;
-          return ++i;
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(2, jsResult, jsonResult);
-    });
-    it('1--', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 1;
-          return i--;
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(1, jsResult, jsonResult);
-    });
-    it('--1', function() {
-      var code = getCode(function () {
-        (function () {
-          var i = 1;
-          return --i;
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(0, jsResult, jsonResult);
     });
 
     it('delete', function() {
@@ -422,37 +604,6 @@ module.exports = function (env) {
       var jsResult = getJsResult(code);
       var jsonResult = getJsonResult(code);
       assert.equal(true, jsResult, jsonResult);
-    });
-    it('property', function() {
-      var code = getCode(function () {
-        (function () {
-          var obj = {a:{b:{c:true}}};
-          return obj.a.b.c;
-        })();
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
-    });
-    it('if inline', function() {
-      var code = getCode(function () {
-        1?true:false
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
-    });
-    it('if', function() {
-      var code = getCode(function () {
-        if (1 - 1) {
-          true
-        } else {
-          false
-        }
-      });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(false, jsResult, jsonResult);
     });
   });
 };
