@@ -301,21 +301,21 @@ var types = {
     return {
       type: 'statement',
       body: item.cases.map(function (_case) {
-        var args;
+        var test;
         if (_case.test === null) {
-          args = [true, true];
+          test = {type: 'raw', data: true};
         } else {
-          args = [
-            parseSection(item.discriminant),
-            parseSection(_case.test)
-          ];
+          test = {
+            type: '===',
+            values: [
+              parseSection(item.discriminant),
+              parseSection(_case.test)
+            ]
+          };
         }
         return {
           type: 'if',
-          test: {
-            type: '===',
-            values: args
-          },
+          test: test,
           then: {
             type: 'statement',
             body: _case.consequent.map(function(item) {

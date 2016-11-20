@@ -113,6 +113,24 @@ module.exports = function (env) {
       });
       assert.equal('b', getJsResult(code), getJsonResult(code));
     });
+    it('switch', function() {
+      var code = getCode(function () {
+        switch (false) {
+          case 3:
+            'a'
+            break
+          case 4:
+            'b'
+            break
+          case 5:
+            'c'
+            break
+          default:
+            'd'
+        }
+      });
+      assert.equal('d', getJsResult(code), getJsonResult(code));
+    });
     it('throw', function() {
       var code = getCode(function () {
         try {
