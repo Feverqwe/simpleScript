@@ -43,5 +43,16 @@ module.exports = function (env) {
       });
       assert.equal('[1,null,"a",1]', getJsResult(code), getJsonResult(code));
     });
+    it('scope', function() {
+      var code = getCode(function () {
+        var a = 1;
+        var f = function () {
+          a = 2;
+        };
+        f();
+        a
+      });
+      assert.equal(2, getJsResult(code), getJsonResult(code));
+    });
   });
 };

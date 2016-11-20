@@ -545,6 +545,20 @@ Interpreter.prototype.commands = {
 /**
  * @private
  */
+Interpreter.prototype.getVariableScope = function (scope, variable) {
+  var _this = this;
+  while (!scope.hasOwnProperty(variable)) {
+    scope = scope.__parent__;
+    if (scope === undefined) {
+      break;
+    }
+  }
+  return scope;
+};
+
+/**
+ * @private
+ */
 Interpreter.prototype.runCommand = function (scope, command) {
   var _this = this;
   var result;
@@ -555,7 +569,7 @@ Interpreter.prototype.runCommand = function (scope, command) {
       }
     } else {
       result = {
-        object: scope,
+        object: _this.getVariableScope(scope, command) || scope,
         key: command
       };
     }
