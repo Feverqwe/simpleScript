@@ -23,7 +23,8 @@ var getJsonResult = function (code) {
     console: console,
     String: String,
     Error: Error,
-    JSON: JSON
+    JSON: JSON,
+    RegExp: RegExp
   });
   return interpreter.runScript(scriptToJson.getJson(code));
 };
