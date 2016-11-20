@@ -16,6 +16,7 @@ var Interpreter = function (customScope) {
    * @private
    */
   _this.scope = {};
+  // _this.scope.this = _this.scope;
 
   if (customScope) {
     _this.extendScope(customScope);
@@ -28,7 +29,7 @@ var Interpreter = function (customScope) {
 Interpreter.prototype.initOperators = function () {
   var _this = this;
   var commands = _this.commands;
-  var dbl_operators = {
+  var arith_operators = {
     '+': function (a,b) {return a+b},
     '-': function (a,b) {return a-b},
     '*': function (a,b) {return a*b},
@@ -49,66 +50,77 @@ Interpreter.prototype.initOperators = function () {
     '>>': function (a,b) {return a>>b},
     '>>>': function (a,b) {return a>>>b}
   };
-  Object.keys(dbl_operators).forEach(function (key) {
-    var operator = dbl_operators[key];
+  Object.keys(arith_operators).forEach(function (key) {
+    var operator = arith_operators[key];
     commands[key] = function (_this, scope, command) {
       var values;
       if (command.value !== undefined) {
-        values = [0, _this.getVariableValue(scope, command.value)];
+        values = [0, _this.getValue(scope, command.value)];
       } else {
-        values = _this.buildArgs(scope, command.values);
+        values = _this.getValues(scope, command.values);
       }
-      return operator(values[0], values[1]);
+      return {
+        value: operator(values[0], values[1])
+      };
     };
   });
-  var one_operators = {
+  var bool_operators = {
     'typeof': function (a) {return typeof a},
     'void': function (a) {return void a},
     '!': function (a) {return !a},
     '~': function (a) {return ~a}
   };
-  Object.keys(one_operators).forEach(function (key) {
-    var operator = one_operators[key];
+  Object.keys(bool_operators).forEach(function (key) {
+    var operator = bool_operators[key];
     commands[key] = function (_this, scope, command) {
-      var value = _this.getVariableValue(scope, command.value);
-      return operator(value);
+      return {
+        value: operator(_this.getValue(scope, command.value))
+      };
     };
   });
   var assign_operators = {
-    '+=': function (o,p,s,c) {return o[p]+=_this.getVariableValue(s,c)},
-    '-=': function (o,p,s,c) {return o[p]-=_this.getVariableValue(s,c)},
-    '*=': function (o,p,s,c) {return o[p]*=_this.getVariableValue(s,c)},
-    '/=': function (o,p,s,c) {return o[p]/=_this.getVariableValue(s,c)},
-    '%=': function (o,p,s,c) {return o[p]%=_this.getVariableValue(s,c)},
-    '<<=': function (o,p,s,c) {return o[p]<<=_this.getVariableValue(s,c)},
-    '>>=': function (o,p,s,c) {return o[p]>>=_this.getVariableValue(s,c)},
-    '>>>=': function (o,p,s,c) {return o[p]>>>=_this.getVariableValue(s,c)},
-    '&=': function (o,p,s,c) {return o[p]&=_this.getVariableValue(s,c)},
-    '^=': function (o,p,s,c) {return o[p]^=_this.getVariableValue(s,c)},
-    '|=': function (o,p,s,c) {return o[p]|=_this.getVariableValue(s,c)}
+    '+=': function (o,k,s,c) {return o[k]+=_this.getValue(s,c)},
+    '-=': function (o,k,s,c) {return o[k]-=_this.getValue(s,c)},
+    '*=': function (o,k,s,c) {return o[k]*=_this.getValue(s,c)},
+    '/=': function (o,k,s,c) {return o[k]/=_this.getValue(s,c)},
+    '%=': function (o,k,s,c) {return o[k]%=_this.getValue(s,c)},
+    '<<=': function (o,k,s,c) {return o[k]<<=_this.getValue(s,c)},
+    '>>=': function (o,k,s,c) {return o[k]>>=_this.getValue(s,c)},
+    '>>>=': function (o,k,s,c) {return o[k]>>>=_this.getValue(s,c)},
+    '&=': function (o,k,s,c) {return o[k]&=_this.getValue(s,c)},
+    '^=': function (o,k,s,c) {return o[k]^=_this.getValue(s,c)},
+    '|=': function (o,k,s,c) {return o[k]|=_this.getValue(s,c)}
   };
   Object.keys(assign_operators).forEach(function (key) {
     var operator = assign_operators[key];
     commands[key] = function (_this, scope, command) {
-      var objProp = _this.getObjectProperty(scope, command.left);
-      if (objProp.noObject) {
-        throw new Error("Error! Left is not object!");
+      var left = _this.runCommand(scope, command.left);
+      if (!left.object) {
+        throw new Error('Operator "' + key + '" error! Left is not defined!');
       }
-      return operator(objProp.object, objProp.property, scope, command.right);
+      return {
+        object: left.object,
+        key: left.key,
+        value: operator(left.object, left.key, scope, command.right)
+      };
     };
   });
   var inc_operators = {
-    '++': function (o,p,c) {return c.prefix ? ++o[p] : o[p]++},
-    '--': function (o,p,c) {return c.prefix ? --o[p] : o[p]--}
+    '++': function (o,k,p) {return p ? ++o[k] : o[k]++},
+    '--': function (o,k,p) {return p ? --o[k] : o[k]--}
   };
   Object.keys(inc_operators).forEach(function (key) {
     var operator = inc_operators[key];
     commands[key] = function (_this, scope, command) {
-      var objProp = _this.getObjectProperty(scope, command.left);
-      if (objProp.noObject) {
-        throw new Error("Error! Left is not object!");
+      var left = _this.runCommand(scope, command.left);
+      if (!left.object) {
+        throw new Error('Operator "' + key + '" error! Left is not defined!');
       }
-      return operator(objProp.object, objProp.property, command);
+      return {
+        object: left.object,
+        key: left.key,
+        value: operator(left.object, left.key, command.prefix)
+      };
     };
   });
 };
@@ -125,63 +137,58 @@ Interpreter.prototype.extendScope = function (customScope) {
 /**
  * @private
  */
-Interpreter.prototype.getVariableScope = function (scope, variable) {
+Interpreter.prototype.getVariableResult = function (scope, variable) {
   var _this = this;
-  while (!scope.hasOwnProperty(variable)) {
-    scope = scope.__parent__;
-    if (scope === undefined) {
-      break;
-    }
-  }
-  return scope || _this.scope;
-};
-
-/**
- * @private
- */
-Interpreter.prototype.getPropValue = function (scope, variable) {
-  var _this = this;
-  if (typeof variable !== 'object') {
-    return variable;
+  if (variable.hasOwnProperty('value')) {
+    return variable.value;
   } else {
-    return _this.runCommand(scope, variable);
+    return variable.object[variable.key];
   }
 };
 
 /**
  * @private
  */
-Interpreter.prototype.buildArgs = function (scope, args) {
+Interpreter.prototype.getValue = function (scope, command) {
   var _this = this;
-  args = args || [];
-  var len = args.length;
-  var fnArgs = new Array(len);
-  for (var i = 0; i < len; i++) {
-    fnArgs[i] = _this.getVariableValue(scope, args[i]);
-  }
-  return fnArgs;
+  var variable = _this.runCommand(scope, command);
+  return _this.getVariableResult(scope, variable);
 };
+
+/**
+ * @private
+ */
+Interpreter.prototype.getValues = function (scope, _values) {
+  var _this = this;
+  _values = _values || [];
+  var len = _values.length;
+  var values = new Array(len);
+  for (var i = 0; i < len; i++) {
+    values[i] = _this.getValue(scope, _values[i]);
+  }
+  return values;
+};
+
+/**
+ * @private
+ */
+Interpreter.prototype.getObjectProperty = function (scope, value, computed) {
+  var _this = this;
+  var result;
+  if (typeof value !== "object" && !computed) {
+    result = value;
+  } else {
+    result = _this.getValue(scope, value);
+  }
+
+  return result;
+};
+
 
 Interpreter.prototype.typeMap = {
   undefined: undefined,
   NaN: NaN,
   Infinity: Infinity
-};
-
-/**
- * @private
- */
-Interpreter.prototype.getVariableValue = function (scope, variable) {
-  var _this = this;
-  if (typeof variable !== 'object') {
-    if (_this.typeMap.hasOwnProperty(variable)) {
-      return _this.typeMap[variable];
-    } else {
-      return scope[variable];
-    }
-  } else {
-    return _this.runCommand(scope, variable);
-  }
 };
 
 /**
@@ -207,38 +214,6 @@ Interpreter.prototype.getLocalScope = function (scope, context, args, callArgs) 
 /**
  * @private
  */
-Interpreter.prototype.getObjectProperty = function (scope, variable) {
-  var _this = this;
-  var noObject = false;
-  var object;
-  var property;
-
-  if (typeof variable !== 'object') {
-    object = _this.getVariableScope(scope, variable);
-    property = variable;
-  } else
-  if (variable.type === 'member') {
-    object = _this.getVariableValue(scope, variable.object);
-    if (variable.computed) {
-      property = _this.getVariableValue(scope, variable.property);
-    } else {
-      property = _this.getPropValue(scope, variable.property);
-    }
-  } else
-  if (variable.type === 'var') {
-    _this.runCommand(scope, variable);
-    object = scope;
-    property = variable.values[0].key;
-  } else {
-    noObject = true;
-  }
-
-  return {object: object, noObject: noObject, property: property};
-};
-
-/**
- * @private
- */
 Interpreter.prototype.SkipResult = {};
 
 /**
@@ -249,56 +224,49 @@ Interpreter.prototype.commands = {
     var item, key;
     for (var i = 0, len = command.values.length; i < len; i++) {
       item = command.values[i];
-      key = _this.getPropValue(scope, item.key);
-      scope[key] = item.value && _this.getVariableValue(scope, item.value);
+      key = item.key;
+      scope[key] = item.value && _this.getValue(scope, item.value);
     }
     return _this.SkipResult;
   },
   call: function (_this, scope, command) {
     var result;
-    var objProp = _this.getObjectProperty(scope, command.callee);
-    var property = objProp.property;
-    var object = objProp.object;
-    var noObject = objProp.noObject;
+
+    var callee = _this.runCommand(scope, command.callee);
     var fn;
-    if (objProp.noObject) {
-      fn = _this.getVariableValue(scope, command.callee);
+    if (!callee.object) {
+      if (!callee.value) {
+        throw new Error('Operator "call" error! Function not defined!');
+      }
+      callee.object = _this.scope;
+      fn = callee.value;
     } else {
-      fn = object[property];
+      fn = callee.object[callee.key];
     }
 
-    var args = _this.buildArgs(scope, command.params);
-
+    var args = _this.getValues(scope, command.params);
     if (typeof fn !== 'function') {
-      throw new Error('Call ' + JSON.stringify(command.callee) + ' is not a function!');
+      throw new Error('Operator "call" error! Value is not a function!');
     }
 
     if (command.isNew) {
-      if (noObject) {
-        args.unshift(_this.scope);
-        result = new (Function.prototype.bind.apply(fn, args));
-      } else {
-        args.unshift(fn);
-        result = new (Function.prototype.bind.apply(fn, args));
-      }
+      args.unshift(fn);
+      result = new (Function.prototype.bind.apply(fn, args));
     } else {
-      if (noObject) {
-        result = fn.apply(_this.scope, args);
-      } else {
-        result = fn.apply(object, args);
-      }
+      result = fn.apply(callee.object, args);
     }
-    return result;
+
+    return {
+      value: result
+    };
   },
   member: function (_this, scope, command) {
-    var object = _this.getVariableValue(scope, command.object);
-    var property;
-    if (command.computed) {
-      property = _this.getVariableValue(scope, command.property);
-    } else {
-      property = _this.getPropValue(scope, command.property);
-    }
-    return object[property];
+    var object = _this.getValue(scope, command.object);
+    var key = _this.getObjectProperty(scope, command.property, command.computed);
+    return {
+      object: object,
+      key: key
+    };
   },
   '{}': function (_this, scope, command) {
     var obj = {};
@@ -306,48 +274,60 @@ Interpreter.prototype.commands = {
     var properties = command.properties;
     if (properties) {
       for (var i = 0, len = properties.length; i < len; i++) {
-        keyValue = properties[i];
-        obj[_this.getPropValue(scope, keyValue[0])] = _this.getVariableValue(scope, keyValue[1]);
+        var property = properties[i];
+        obj[_this.getObjectProperty(scope, property.key, property.computed)] = _this.getValue(scope, property.value);
       }
     }
-    return obj;
+    return {
+      value: obj
+    };
   },
   '[]': function (_this, scope, command) {
     var values = command.values || [];
     var len = values.length;
     var arr = new Array(len);
     for (var i = 0; i < len; i++) {
-      arr[i] = _this.getVariableValue(scope, values[i]);
+      arr[i] = _this.getValue(scope, values[i]);
     }
-    return arr;
+    return {
+      value: arr
+    };
   },
   '=': function (_this, scope, command) {
     var result;
-    var objProp = _this.getObjectProperty(scope, command.left);
-    var value = _this.getVariableValue(scope, command.right);
-    if (objProp.noObject) {
-      result = value;
-    } else {
-      result = objProp.object[objProp.property] = value;
+    var left = _this.runCommand(scope, command.left);
+    if (!left.object) {
+      throw new Error('Operator "' + key + '" error! Left is not defined!');
     }
-    return result;
+    return {
+      object: left.object,
+      key: left.key,
+      value: left.object[left.key] = _this.getValue(scope, command.right)
+    };
   },
   delete: function (_this, scope, command) {
-    var objProp = _this.getObjectProperty(scope, command.value);
-    return delete objProp.object[objProp.property];
+    var variable = _this.runCommand(scope, command.value);
+    return {
+      value: delete variable.object[variable.key]
+    };
   },
   in: function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return (values[0] in values[1]);
+    var values = _this.getValues(scope, command.values);
+    return {
+      value: values[0] in values[1]
+    };
   },
   instanceof: function (_this, scope, command) {
-    var values = _this.buildArgs(scope, command.values);
-    return (values[0] instanceof values[1]);
+    var values = _this.getValues(scope, command.values);
+    return {
+      value: values[0] instanceof values[1]
+    };
   },
   return: function (_this, scope, command) {
-    var value = _this.getVariableValue(scope, command.value);
     scope.return = true;
-    return value;
+    return {
+      value: _this.getValue(scope, command.value)
+    };
   },
   break: function (_this, scope, command) {
     scope.break = true;
@@ -358,26 +338,36 @@ Interpreter.prototype.commands = {
     return _this.SkipResult;
   },
   raw: function (_this, scope, command) {
-    return command.data;
+    return {
+      value: command.data
+    };
   },
   function: function (_this, scope, command) {
-    return function () {
-      var localScope = _this.getLocalScope(scope, this, command.params, [].slice.call(arguments));
-      var result = _this.runCommand(localScope, command.body);
-      if (result === _this.SkipResult) {
-        result = undefined;
-      }
-      if (localScope.hasOwnProperty('return') && localScope.return === true) {
-        return result;
+    return {
+      value: function () {
+        var localScope = _this.getLocalScope(scope, this, command.params, [].slice.call(arguments));
+        var result = _this.runCommand(localScope, command.body);
+        if (result === _this.SkipResult) {
+          result = undefined;
+        }
+        if (localScope.hasOwnProperty('return') && localScope.return === true) {
+          return _this.getVariableResult(localScope, result);
+        }
       }
     };
   },
   statement: function (_this, scope, command) {
-    return _this.execScript(scope, command.body, _this.SkipResult);
+    var result = _this.execScript(scope, command.body, {value: _this.SkipResult});
+    if (result !== _this.SkipResult) {
+      result = {
+        value: result
+      };
+    }
+    return result;
   },
   if: function (_this, scope, command) {
     var result = _this.SkipResult;
-    if (_this.getVariableValue(scope, command.test)) {
+    if (_this.getValue(scope, command.test)) {
       result = _this.runCommand(scope, command.then);
     } else
     if (command.else) {
@@ -390,14 +380,14 @@ Interpreter.prototype.commands = {
     command.init && _this.runCommand(scope, command.init);
     var test = function () {
       if (command.test) {
-        return _this.getVariableValue(scope, command.test);
+        return _this.getValue(scope, command.test);
       } else {
         return true;
       }
     };
     var update = function () {
       if (command.update) {
-        return _this.getVariableValue(scope, command.update);
+        return _this.getValue(scope, command.update);
       }
     };
     for (;test();update()) {
@@ -415,26 +405,33 @@ Interpreter.prototype.commands = {
         break;
       }
       if (scope.hasOwnProperty('return') && scope.return === true) {
-        return result;
+        break;
       }
     }
     return result;
   },
   forIn: function (_this, scope, command) {
     var result = _this.SkipResult, prevResult;
-    var objProp = _this.getObjectProperty(scope, command.left);
-    var property = objProp.property;
-    var object = objProp.object;
+    var left = _this.runCommand(scope, command.left);
 
-    var noObject = objProp.noObject;
-    if (noObject) {
-      throw new Error("forIn error! Left is not object!");
+    var object;
+    var key;
+    if (command.left.type === 'var') {
+      object = scope;
+      key = command.left.values[0].key;
+    } else {
+      object = left.object;
+      key = left.key;
     }
 
-    var obj = _this.getVariableValue(scope, command.right);
+    if (!object) {
+      throw new Error('Operator "forIn" error! Left is not defined!');
+    }
 
-    for (var key in obj) {
-      object[property] = key;
+    var obj = _this.getValue(scope, command.right);
+
+    for (var cKey in obj) {
+      object[key] = cKey;
       prevResult = result;
       result = _this.runCommand(scope, command.body);
       if (result === _this.SkipResult) {
@@ -449,7 +446,7 @@ Interpreter.prototype.commands = {
         break;
       }
       if (scope.hasOwnProperty('return') && scope.return === true) {
-        return result;
+        break;
       }
     }
     return result;
@@ -458,7 +455,7 @@ Interpreter.prototype.commands = {
     var result = _this.SkipResult, prevResult;
     var test = function () {
       if (command.test) {
-        return _this.getVariableValue(scope, command.test);
+        return _this.getValue(scope, command.test);
       } else {
         return true;
       }
@@ -478,7 +475,7 @@ Interpreter.prototype.commands = {
         break;
       }
       if (scope.hasOwnProperty('return') && scope.return === true) {
-        return result;
+        break;
       }
     }
     return result;
@@ -487,7 +484,7 @@ Interpreter.prototype.commands = {
     var result = _this.SkipResult, prevResult;
     var test = function () {
       if (command.test) {
-        return _this.getVariableValue(scope, command.test);
+        return _this.getValue(scope, command.test);
       } else {
         return true;
       }
@@ -507,13 +504,13 @@ Interpreter.prototype.commands = {
         break;
       }
       if (scope.hasOwnProperty('return') && scope.return === true) {
-        return result;
+        break;
       }
     } while (test());
     return result;
   },
   throw: function (_this, scope, command) {
-    throw _this.getVariableValue(scope, command.value);
+    throw _this.getValue(scope, command.value);
   },
   try: function (_this, scope, command) {
     var result = _this.SkipResult;
@@ -534,10 +531,14 @@ Interpreter.prototype.commands = {
     return result;
   },
   '&&': function (_this, scope, command) {
-    return _this.getVariableValue(scope, command.values[0]) && _this.getVariableValue(scope, command.values[1]);
+    return {
+      value: _this.getValue(scope, command.values[0]) && _this.getValue(scope, command.values[1])
+    };
   },
   '||': function (_this, scope, command) {
-    return _this.getVariableValue(scope, command.values[0]) || _this.getVariableValue(scope, command.values[1]);
+    return {
+      value: _this.getValue(scope, command.values[0]) || _this.getValue(scope, command.values[1])
+    };
   }
 };
 
@@ -546,41 +547,52 @@ Interpreter.prototype.commands = {
  */
 Interpreter.prototype.runCommand = function (scope, command) {
   var _this = this;
+  var result;
   if (typeof command !== 'object') {
-    return _this.getVariableValue(scope, command);
+    if (_this.typeMap.hasOwnProperty(command)) {
+      result = {
+        value: _this.typeMap[command]
+      }
+    } else {
+      result = {
+        object: scope,
+        key: command
+      };
+    }
   } else {
-    var type = command.type;
-    return _this.commands[type](_this, scope, command);
+    result = _this.commands[command.type](_this, scope, command);
   }
+  return result;
 };
 
 /**
  * @private
  */
-Interpreter.prototype.execScript = function (localScope, script, result) {
+Interpreter.prototype.execScript = function (scope, script, result) {
   var _this = this;
   var prevResult, command;
   for (var i = 0, len = script.length; i < len; i++) {
     command = script[i];
     prevResult = result;
-    result = _this.runCommand(localScope, command);
+    result = _this.runCommand(scope, command);
     if (result === _this.SkipResult) {
       result = prevResult;
     }
     if (
-      (localScope.hasOwnProperty('return') && localScope.return === true) ||
-      (localScope.hasOwnProperty('break') && localScope.break === true) ||
-      (localScope.hasOwnProperty('continue') && localScope.continue === true)
+      (scope.hasOwnProperty('return') && scope.return === true) ||
+      (scope.hasOwnProperty('break') && scope.break === true) ||
+      (scope.hasOwnProperty('continue') && scope.continue === true)
     ) {
       break;
     }
   }
-  return result;
+  return _this.getVariableResult(scope, result);
 };
 
 Interpreter.prototype.runScript = function (script) {
   var _this = this;
-  return _this.execScript(_this.scope, script);
+  var scope = _this.scope;
+  return _this.execScript(scope, script, {value: undefined});
 };
 
 module.exports = Interpreter;

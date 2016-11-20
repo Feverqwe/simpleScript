@@ -6,14 +6,6 @@ var ScriptToJson = require('./scriptToJson');
 var uglifyJs = require("uglify-js");
 
 var myScript = function () {
-  console.log([
-    NaN,
-    Infinity,
-    false,
-    true,
-    null,
-    undefined
-  ]);
 };
 
 var stripFn = function (code) {
@@ -34,7 +26,9 @@ var stripFn = function (code) {
     Array: Array,
     Math: Math,
     RegExp: RegExp,
-    parseInt: parseInt
+    parseInt: parseInt,
+    Function: Function,
+    String: String
   });
 
   var scriptToJson = new ScriptToJson({
@@ -45,7 +39,7 @@ var stripFn = function (code) {
   console.log('jsScript', jsScript);
 
   /*var fs = require('fs');
-  var jsScriptFromFile = fs.readFileSync('./travelBar.js').toString();
+  var jsScriptFromFile = fs.readFileSync('./tmp/lodash.min.js').toString();
   jsScript = jsScriptFromFile + '\n\n' + jsScript;*/
 
   console.time('jsScript');

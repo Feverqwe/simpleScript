@@ -22,7 +22,8 @@ var getJsonResult = function (code) {
   var interpreter = new Interpreter({
     console: console,
     String: String,
-    Error: Error
+    Error: Error,
+    JSON: JSON
   });
   return interpreter.runScript(scriptToJson.getJson(code));
 };
@@ -44,5 +45,6 @@ var env = {
   assert: assert
 };
 
+require('./other')(env);
 require('./iterators')(env);
 require('./operators')(env);

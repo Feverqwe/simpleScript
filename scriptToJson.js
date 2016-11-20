@@ -13,6 +13,11 @@ var types = {
         }
 
         var key = parseSection(item.id);
+        if (typeof key !== 'string') {
+          console.error('VariableDeclaration, Key is not string!', item);
+          throw "VariableDeclaration, Key is not string!";
+        }
+
         var value;
         if (item.init) {
           value = parseSection(item.init);
@@ -193,10 +198,11 @@ var types = {
   },
   ObjectExpression: function (item) {
     var properties = item.properties.map(function (item) {
-      return [
-        parseSection(item.key),
-        parseSection(item.value)
-      ];
+      return {
+        computed: item.computed,
+        key: parseSection(item.key),
+        value: parseSection(item.value)
+      };
     });
     if (!properties.length) {
       properties = undefined;
