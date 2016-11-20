@@ -243,7 +243,7 @@ var types = {
   },
   BreakStatement: function (item) {
     if (item.label) {
-      console.log(JSON.stringify(item));
+      console.error(JSON.stringify(item));
       throw "Method 'label' is not supported!"
     }
 
@@ -327,16 +327,18 @@ var types = {
     }
   },
   LabeledStatement: function (item) {
-    return {
+    console.error(JSON.stringify(item));
+    throw "LabeledStatement is not supported!";
+    /*return {
       type: '{}',
       properties: [
         [parseSection(item.label),parseSection(item.body)]
       ]
-    }
+    }*/
   },
   ContinueStatement: function (item) {
     if (item.label) {
-      console.log(JSON.stringify(item));
+      console.error(JSON.stringify(item));
       throw "Method 'label' is not supported!"
     }
 
@@ -351,6 +353,10 @@ var types = {
       right: parseSection(item.right),
       body: parseSection(item.body)
     };
+  },
+  WithStatement: function (item) {
+    console.error(JSON.stringify(item));
+    throw "WithStatement is not supported!"
   }
 };
 

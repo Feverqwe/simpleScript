@@ -164,6 +164,21 @@ module.exports = function (env) {
       });
       assert.equal('3,6', getJsResult(code), getJsonResult(code));
     });
+    it('while', function() {
+      var code = getCode(function () {
+        function BreakTest(breakpoint){
+          var i = 0;
+          while (i < 100) {
+            if (i == breakpoint)
+              break;
+            i++;
+          }
+          return(i);
+        }
+        BreakTest(3);
+      });
+      assert.equal(3, getJsResult(code), getJsonResult(code));
+    });
 
   });
 };
