@@ -68,5 +68,16 @@ module.exports = function (env) {
       });
       assert.equal(true, getJsResult(code), getJsonResult(code));
     });
+    it('return', function() {
+      var code = getCode(function () {
+        var a = (function () {
+          return 1;
+        })(), b = (function () {
+          return 1;
+        })(), c = b;
+        [a,b,c].join(',')
+      });
+      assert.equal([1,1,1].join(','), getJsResult(code), getJsonResult(code));
+    });
   });
 };

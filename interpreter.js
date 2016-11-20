@@ -324,9 +324,10 @@ Interpreter.prototype.commands = {
     };
   },
   return: function (_this, scope, command) {
+    var result = _this.getValue(scope, command.value);
     scope.return = true;
     return {
-      value: _this.getValue(scope, command.value)
+      value: result
     };
   },
   break: function (_this, scope, command) {
