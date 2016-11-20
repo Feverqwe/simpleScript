@@ -6,6 +6,7 @@ var ScriptToJson = require('./scriptToJson');
 var uglifyJs = require("uglify-js");
 
 var myScript = function () {
+
 };
 
 var stripFn = function (code) {

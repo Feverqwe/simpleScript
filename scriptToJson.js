@@ -242,6 +242,11 @@ var types = {
     }
   },
   BreakStatement: function (item) {
+    if (item.label) {
+      console.log(JSON.stringify(item));
+      throw "Method 'label' is not supported!"
+    }
+
     return {
       type: 'break'
     }
@@ -330,6 +335,11 @@ var types = {
     }
   },
   ContinueStatement: function (item) {
+    if (item.label) {
+      console.log(JSON.stringify(item));
+      throw "Method 'label' is not supported!"
+    }
+
     return {
       type: 'continue'
     }
