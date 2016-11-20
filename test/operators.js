@@ -259,6 +259,12 @@ module.exports = function (env) {
         });
         assert.equal(true, getJsResult(code), getJsonResult(code));
       });
+      it('2.5 == "2.5"', function() {
+        var code = getCode(function () {
+          2.5 == '2.5'
+        });
+        assert.equal(true, getJsResult(code), getJsonResult(code));
+      });
       it('!=', function() {
         var code = getCode(function () {
           2 != 2
@@ -270,6 +276,12 @@ module.exports = function (env) {
           2 === '2'
         });
         assert.equal(false, getJsResult(code), getJsonResult(code));
+      });
+      it('2.5 === 2.5', function() {
+        var code = getCode(function () {
+          2.5 === 2.5
+        });
+        assert.equal(true, getJsResult(code), getJsonResult(code));
       });
       it('!==', function() {
         var code = getCode(function () {
