@@ -6,7 +6,14 @@ var ScriptToJson = require('./scriptToJson');
 var uglifyJs = require("uglify-js");
 
 var myScript = function () {
-  1;
+  console.log([
+    NaN,
+    Infinity,
+    false,
+    true,
+    null,
+    undefined
+  ]);
 };
 
 var stripFn = function (code) {

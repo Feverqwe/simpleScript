@@ -92,7 +92,7 @@ Interpreter.prototype.initOperators = function () {
     commands[key] = function (_this, scope, command) {
       var objProp = _this.getObjectProperty(scope, command.left);
       if (objProp.noObject) {
-        throw "Error! Left is not object!";
+        throw new Error("Error! Left is not object!");
       }
       return operator(objProp.object, objProp.property, scope, command.right);
     };
@@ -106,7 +106,7 @@ Interpreter.prototype.initOperators = function () {
     commands[key] = function (_this, scope, command) {
       var objProp = _this.getObjectProperty(scope, command.left);
       if (objProp.noObject) {
-        throw "Error! Left is not object!";
+        throw new Error("Error! Left is not object!");
       }
       return operator(objProp.object, objProp.property, command);
     };
@@ -162,13 +162,23 @@ Interpreter.prototype.buildArgs = function (scope, args) {
   return fnArgs;
 };
 
+Interpreter.prototype.typeMap = {
+  undefined: undefined,
+  NaN: NaN,
+  Infinity: Infinity
+};
+
 /**
  * @private
  */
 Interpreter.prototype.getVariableValue = function (scope, variable) {
   var _this = this;
   if (typeof variable !== 'object') {
-    return scope[variable];
+    if (_this.typeMap.hasOwnProperty(variable)) {
+      return _this.typeMap[variable];
+    } else {
+      return scope[variable];
+    }
   } else {
     return _this.runCommand(scope, variable);
   }
@@ -418,7 +428,7 @@ Interpreter.prototype.commands = {
 
     var noObject = objProp.noObject;
     if (noObject) {
-      throw "forIn error! Left is not object!";
+      throw new Error("forIn error! Left is not object!");
     }
 
     var obj = _this.getVariableValue(scope, command.right);

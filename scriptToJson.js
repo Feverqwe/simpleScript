@@ -22,10 +22,6 @@ var types = {
     };
   },
   Identifier: function (item) {
-    var value = item.name;
-    if (item.name === 'undefined') {
-      value = undefined;
-    }
     return item.name;
   },
   FunctionExpression: function (item) {
