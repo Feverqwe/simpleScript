@@ -14,41 +14,31 @@ module.exports = function (env) {
         var code = getCode(function () {
           1 + 2;
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(3, jsResult, jsonResult);
+        assert.equal(3, getJsResult(code), getJsonResult(code));
       });
       it('-', function() {
         var code = getCode(function () {
           1 - 2;
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(-1, jsResult, jsonResult);
+        assert.equal(-1, getJsResult(code), getJsonResult(code));
       });
       it('*', function() {
         var code = getCode(function () {
           3 * 2;
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(6, jsResult, jsonResult);
+        assert.equal(6, getJsResult(code), getJsonResult(code));
       });
       it('/', function() {
         var code = getCode(function () {
           3 / 2;
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(1.5, jsResult, jsonResult);
+        assert.equal(1.5, getJsResult(code), getJsonResult(code));
       });
       it('%', function() {
         var code = getCode(function () {
           7 % 2
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(1, jsResult, jsonResult);
+        assert.equal(1, getJsResult(code), getJsonResult(code));
       });
 
       describe('++', function () {
@@ -59,9 +49,7 @@ module.exports = function (env) {
               return i++;
             })();
           });
-          var jsResult = getJsResult(code);
-          var jsonResult = getJsonResult(code);
-          assert.equal(1, jsResult, jsonResult);
+          assert.equal(1, getJsResult(code), getJsonResult(code));
         });
         it('++1', function () {
           var code = getCode(function () {
@@ -70,9 +58,7 @@ module.exports = function (env) {
               return ++i;
             })();
           });
-          var jsResult = getJsResult(code);
-          var jsonResult = getJsonResult(code);
-          assert.equal(2, jsResult, jsonResult);
+          assert.equal(2, getJsResult(code), getJsonResult(code));
         });
       });
       describe('--', function () {
@@ -83,9 +69,7 @@ module.exports = function (env) {
               return i--;
             })();
           });
-          var jsResult = getJsResult(code);
-          var jsonResult = getJsonResult(code);
-          assert.equal(1, jsResult, jsonResult);
+          assert.equal(1, getJsResult(code), getJsonResult(code));
         });
         it('--1', function() {
           var code = getCode(function () {
@@ -94,9 +78,7 @@ module.exports = function (env) {
               return --i;
             })();
           });
-          var jsResult = getJsResult(code);
-          var jsonResult = getJsonResult(code);
-          assert.equal(0, jsResult, jsonResult);
+          assert.equal(0, getJsResult(code), getJsonResult(code));
         });
       });
     });
@@ -111,9 +93,7 @@ module.exports = function (env) {
           };
           a() && b();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(2, jsResult, jsonResult);
+        assert.equal(2, getJsResult(code), getJsonResult(code));
       });
       it('0 && 2', function() {
         var code = getCode(function () {
@@ -125,9 +105,7 @@ module.exports = function (env) {
           };
           a() && b();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(0, jsResult, jsonResult);
+        assert.equal(0, getJsResult(code), getJsonResult(code));
       });
       it('0 || 1', function() {
         var code = getCode(function () {
@@ -139,9 +117,7 @@ module.exports = function (env) {
           };
           a() || b();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(1, jsResult, jsonResult);
+        assert.equal(1, getJsResult(code), getJsonResult(code));
       });
       it('1 || 2', function() {
         var code = getCode(function () {
@@ -153,25 +129,19 @@ module.exports = function (env) {
           };
           a() || b();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(1, jsResult, jsonResult);
+        assert.equal(1, getJsResult(code), getJsonResult(code));
       });
       it('!0', function() {
         var code = getCode(function () {
           !0
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(true, jsResult, jsonResult);
+        assert.equal(true, getJsResult(code), getJsonResult(code));
       });
       it('!1', function() {
         var code = getCode(function () {
           !1
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(false, jsResult, jsonResult);
+        assert.equal(false, getJsResult(code), getJsonResult(code));
       });
     });
     describe('assignment', function () {
@@ -180,9 +150,7 @@ module.exports = function (env) {
          var a = '1';
          a = '2';
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal('2', jsResult, jsonResult);
+        assert.equal('2', getJsResult(code), getJsonResult(code));
       });
       it('+=', function() {
         var code = getCode(function () {
@@ -191,9 +159,7 @@ module.exports = function (env) {
             return i += 1
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(2, jsResult, jsonResult);
+        assert.equal(2, getJsResult(code), getJsonResult(code));
       });
       it('-=', function() {
         var code = getCode(function () {
@@ -202,9 +168,7 @@ module.exports = function (env) {
             return i -= 1
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(0, jsResult, jsonResult);
+        assert.equal(0, getJsResult(code), getJsonResult(code));
       });
       it('*=', function() {
         var code = getCode(function () {
@@ -213,9 +177,7 @@ module.exports = function (env) {
             return i *= 2
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(4, jsResult, jsonResult);
+        assert.equal(4, getJsResult(code), getJsonResult(code));
       });
       it('/=', function() {
         var code = getCode(function () {
@@ -224,9 +186,7 @@ module.exports = function (env) {
             return i /= 2
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(1, jsResult, jsonResult);
+        assert.equal(1, getJsResult(code), getJsonResult(code));
       });
       it('>>=', function() {
         var code = getCode(function () {
@@ -235,9 +195,7 @@ module.exports = function (env) {
             return i >>= 2
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(-3, jsResult, jsonResult);
+        assert.equal(-3, getJsResult(code), getJsonResult(code));
       });
       it('<<=', function() {
         var code = getCode(function () {
@@ -246,9 +204,7 @@ module.exports = function (env) {
             return i <<= 2
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(36, jsResult, jsonResult);
+        assert.equal(36, getJsResult(code), getJsonResult(code));
       });
       it('>>>=', function() {
         var code = getCode(function () {
@@ -257,9 +213,7 @@ module.exports = function (env) {
             return i >>>= 2
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(1073741821, jsResult, jsonResult);
+        assert.equal(1073741821, getJsResult(code), getJsonResult(code));
       });
       it('&=', function() {
         var code = getCode(function () {
@@ -268,9 +222,7 @@ module.exports = function (env) {
             return i &= 9
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(8, jsResult, jsonResult);
+        assert.equal(8, getJsResult(code), getJsonResult(code));
       });
       it('|=', function() {
         var code = getCode(function () {
@@ -279,9 +231,7 @@ module.exports = function (env) {
             return i |= 9
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(15, jsResult, jsonResult);
+        assert.equal(15, getJsResult(code), getJsonResult(code));
       });
       it('^=', function() {
         var code = getCode(function () {
@@ -290,9 +240,7 @@ module.exports = function (env) {
             return i ^= 9
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(7, jsResult, jsonResult);
+        assert.equal(7, getJsResult(code), getJsonResult(code));
       });
       it('%=', function() {
         var code = getCode(function () {
@@ -301,9 +249,7 @@ module.exports = function (env) {
             return i %= 2
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(1, jsResult, jsonResult);
+        assert.equal(1, getJsResult(code), getJsonResult(code));
       });
     });
     describe('comparison', function () {
@@ -311,65 +257,49 @@ module.exports = function (env) {
         var code = getCode(function () {
           2 == '2'
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(true, jsResult, jsonResult);
+        assert.equal(true, getJsResult(code), getJsonResult(code));
       });
       it('!=', function() {
         var code = getCode(function () {
           2 != 2
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(false, jsResult, jsonResult);
+        assert.equal(false, getJsResult(code), getJsonResult(code));
       });
       it('===', function() {
         var code = getCode(function () {
           2 === '2'
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(false, jsResult, jsonResult);
+        assert.equal(false, getJsResult(code), getJsonResult(code));
       });
       it('!==', function() {
         var code = getCode(function () {
           2 !== 3
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(true, jsResult, jsonResult);
+        assert.equal(true, getJsResult(code), getJsonResult(code));
       });
       it('>', function() {
         var code = getCode(function () {
           2 > 1
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(true, jsResult, jsonResult);
+        assert.equal(true, getJsResult(code), getJsonResult(code));
       });
       it('>=', function() {
         var code = getCode(function () {
           2 >= 2
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(true, jsResult, jsonResult);
+        assert.equal(true, getJsResult(code), getJsonResult(code));
       });
       it('<', function() {
         var code = getCode(function () {
           2 < 1
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(false, jsResult, jsonResult);
+        assert.equal(false, getJsResult(code), getJsonResult(code));
       });
       it('<=', function() {
         var code = getCode(function () {
           2 <= 2
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(true, jsResult, jsonResult);
+        assert.equal(true, getJsResult(code), getJsonResult(code));
       });
     });
     describe('bitwise', function () {
@@ -377,57 +307,43 @@ module.exports = function (env) {
         var code = getCode(function () {
           14 & 9
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(8, jsResult, jsonResult);
+        assert.equal(8, getJsResult(code), getJsonResult(code));
       });
       it('|', function() {
         var code = getCode(function () {
           14 | 9
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(15, jsResult, jsonResult);
+        assert.equal(15, getJsResult(code), getJsonResult(code));
       });
       it('^', function() {
         var code = getCode(function () {
           14 ^ 9
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(7, jsResult, jsonResult);
+        assert.equal(7, getJsResult(code), getJsonResult(code));
       });
       it('~', function() {
         var code = getCode(function () {
           ~9
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(-10, jsResult, jsonResult);
+        assert.equal(-10, getJsResult(code), getJsonResult(code));
       });
       it('<<', function() {
         var code = getCode(function () {
           9 << 2
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(36, jsResult, jsonResult);
+        assert.equal(36, getJsResult(code), getJsonResult(code));
       });
       it('>>', function() {
         var code = getCode(function () {
           -9 >> 2
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(-3, jsResult, jsonResult);
+        assert.equal(-3, getJsResult(code), getJsonResult(code));
       });
       it('>>>', function() {
         var code = getCode(function () {
           -9 >>> 2
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(1073741821, jsResult, jsonResult);
+        assert.equal(1073741821, getJsResult(code), getJsonResult(code));
       });
     });
     describe('cond', function () {
@@ -435,9 +351,7 @@ module.exports = function (env) {
         var code = getCode(function () {
           1?true:false
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(true, jsResult, jsonResult);
+        assert.equal(true, getJsResult(code), getJsonResult(code));
       });
       it('if', function() {
         var code = getCode(function () {
@@ -447,9 +361,7 @@ module.exports = function (env) {
             false
           }
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(false, jsResult, jsonResult);
+        assert.equal(false, getJsResult(code), getJsonResult(code));
       });
     });
 
@@ -458,65 +370,49 @@ module.exports = function (env) {
         var code = getCode(function () {
           typeof 1
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal('number', jsResult, jsonResult);
+        assert.equal('number', getJsResult(code), getJsonResult(code));
       });
       it('typeof "1"', function () {
         var code = getCode(function () {
           typeof "1"
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal('string', jsResult, jsonResult);
+        assert.equal('string', getJsResult(code), getJsonResult(code));
       });
       it('typeof NaN', function () {
         var code = getCode(function () {
           typeof NaN
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal('number', jsResult, jsonResult);
+        assert.equal('number', getJsResult(code), getJsonResult(code));
       });
       it('typeof Infinity', function () {
         var code = getCode(function () {
           typeof Infinity
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal('number', jsResult, jsonResult);
+        assert.equal('number', getJsResult(code), getJsonResult(code));
       });
       it('typeof undefined', function () {
         var code = getCode(function () {
           typeof undefined
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal('undefined', jsResult, jsonResult);
+        assert.equal('undefined', getJsResult(code), getJsonResult(code));
       });
       it('typeof null', function () {
         var code = getCode(function () {
           typeof null
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal('object', jsResult, jsonResult);
+        assert.equal('object', getJsResult(code), getJsonResult(code));
       });
       it('typeof false', function () {
         var code = getCode(function () {
           typeof false
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal('boolean', jsResult, jsonResult);
+        assert.equal('boolean', getJsResult(code), getJsonResult(code));
       });
       it('typeof true', function () {
         var code = getCode(function () {
           typeof true
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal('boolean', jsResult, jsonResult);
+        assert.equal('boolean', getJsResult(code), getJsonResult(code));
       });
     });
 
@@ -528,9 +424,7 @@ module.exports = function (env) {
             return obj.a.b.c;
           })();
         });
-        var jsResult = getJsResult(code);
-        var jsonResult = getJsonResult(code);
-        assert.equal(true, jsResult, jsonResult);
+        assert.equal(true, getJsResult(code), getJsonResult(code));
       });
     });
 
@@ -538,9 +432,7 @@ module.exports = function (env) {
       var code = getCode(function () {
         void 0
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(undefined, jsResult, jsonResult);
+      assert.equal(undefined, getJsResult(code), getJsonResult(code));
     });
 
     it('delete', function() {
@@ -553,9 +445,7 @@ module.exports = function (env) {
           return !t.hasOwnProperty('a');
         })();
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
+      assert.equal(true, getJsResult(code), getJsonResult(code));
     });
     it('function', function() {
       var code = getCode(function () {
@@ -566,9 +456,7 @@ module.exports = function (env) {
           return fn();
         })();
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(5, jsResult, jsonResult);
+      assert.equal(5, getJsResult(code), getJsonResult(code));
     });
     it('in', function() {
       var code = getCode(function () {
@@ -579,9 +467,7 @@ module.exports = function (env) {
           }
         })();
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
+      assert.equal(true, getJsResult(code), getJsonResult(code));
     });
     it('instanceof', function() {
       var code = getCode(function () {
@@ -590,9 +476,7 @@ module.exports = function (env) {
           return str instanceof String
         })();
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
+      assert.equal(true, getJsResult(code), getJsonResult(code));
     });
     it('new', function() {
       var code = getCode(function () {
@@ -601,9 +485,7 @@ module.exports = function (env) {
           return error instanceof Error;
         })();
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(true, jsResult, jsonResult);
+      assert.equal(true, getJsResult(code), getJsonResult(code));
     });
   });
 };

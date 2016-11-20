@@ -15,9 +15,7 @@ module.exports = function (env) {
           if (i==5) break;
         }
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(5, jsResult, jsonResult);
+      assert.equal(5, getJsResult(code), getJsonResult(code));
     });
     it('break 2', function() {
       var code = getCode(function () {
@@ -33,9 +31,7 @@ module.exports = function (env) {
         }
         j+i;
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(10, jsResult, jsonResult);
+      assert.equal(10, getJsResult(code), getJsonResult(code));
     });
     it('continue', function() {
       var code = getCode(function () {
@@ -44,9 +40,7 @@ module.exports = function (env) {
           i
         }
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(5, jsResult, jsonResult);
+      assert.equal(5, getJsResult(code), getJsonResult(code));
     });
     it('do while', function() {
       var code = getCode(function () {
@@ -55,9 +49,7 @@ module.exports = function (env) {
           i += 1;
         } while (i < 5)
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(5, jsResult, jsonResult);
+      assert.equal(5, getJsResult(code), getJsonResult(code));
     });
     it('for', function() {
       var code = getCode(function () {
@@ -66,9 +58,7 @@ module.exports = function (env) {
           n += i
         }
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(36, jsResult, jsonResult);
+      assert.equal(36, getJsResult(code), getJsonResult(code));
     });
     it('for ;;', function() {
       var code = getCode(function () {
@@ -81,9 +71,7 @@ module.exports = function (env) {
           }
         }
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(7, jsResult, jsonResult);
+      assert.equal(7, getJsResult(code), getJsonResult(code));
     });
     it('forIn', function() {
       var code = getCode(function () {
@@ -95,9 +83,7 @@ module.exports = function (env) {
           a[p] = a[p] + 1
         }
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(3, jsResult, jsonResult);
+      assert.equal(3, getJsResult(code), getJsonResult(code));
     });
     it('return', function() {
       var code = getCode(function () {
@@ -106,9 +92,7 @@ module.exports = function (env) {
         }
         square(2);
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(4, jsResult, jsonResult);
+      assert.equal(4, getJsResult(code), getJsonResult(code));
     });
     it('switch', function() {
       var code = getCode(function () {
@@ -127,9 +111,7 @@ module.exports = function (env) {
             'd'
         }
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal('b', jsResult, jsonResult);
+      assert.equal('b', getJsResult(code), getJsonResult(code));
     });
     it('throw', function() {
       var code = getCode(function () {
@@ -139,9 +121,7 @@ module.exports = function (env) {
           e
         }
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal('err', jsResult, jsonResult);
+      assert.equal('err', getJsResult(code), getJsonResult(code));
     });
     it('tryCatch', function() {
       var code = getCode(function () {
@@ -170,9 +150,7 @@ module.exports = function (env) {
         })();
         a;
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal(0, jsResult, jsonResult);
+      assert.equal(0, getJsResult(code), getJsonResult(code));
     });
     it('while', function() {
       var code = getCode(function () {
@@ -184,9 +162,7 @@ module.exports = function (env) {
         }
         n + ',' + x
       });
-      var jsResult = getJsResult(code);
-      var jsonResult = getJsonResult(code);
-      assert.equal('3,6', jsResult, jsonResult);
+      assert.equal('3,6', getJsResult(code), getJsonResult(code));
     });
 
   });
