@@ -215,7 +215,7 @@ var types = {
   ArrayExpression: function (item) {
     var values = item.elements.map(function (item) {
       if (item === null) {
-        return undefined;
+        return {type: 'raw'};
       } else {
         return parseSection(item);
       }
