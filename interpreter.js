@@ -165,7 +165,7 @@ Interpreter.prototype.getVariableResult = function (scope, variable) {
  */
 Interpreter.prototype.getValue = function (scope, command) {
   var _this = this;
-  var variable = _this.runCommand(scope, command);
+  var variable = _this.runCommand(scope, command, true);
   return _this.getVariableResult(scope, variable);
 };
 
@@ -338,7 +338,7 @@ Interpreter.prototype.commands = {
     return {
       value: function () {
         var localScope = _this.getLocalScope(scope, this, command.params, argsToArray.call(arguments));
-        var result = _this.runCommand(localScope, command.body);
+        var result = _this.runCommand(localScope, command.body, true);
         if (result === _this.SkipResult) {
           result = undefined;
         }
@@ -448,8 +448,6 @@ Interpreter.prototype.commands = {
     var test = function () {
       if (command.test) {
         return _this.getValue(scope, command.test);
-      } else {
-        return true;
       }
     };
     while (test()) {
@@ -477,8 +475,6 @@ Interpreter.prototype.commands = {
     var test = function () {
       if (command.test) {
         return _this.getValue(scope, command.test);
-      } else {
-        return true;
       }
     };
     do {
@@ -540,7 +536,7 @@ Interpreter.prototype.getVariableScope = function (scope, variable) {
 /**
  * @private
  */
-Interpreter.prototype.runCommand = function (scope, command) {
+Interpreter.prototype.runCommand = function (scope, command, noRootScope) {
   var _this = this;
   var result;
   if (typeof command !== 'object') {
@@ -550,7 +546,7 @@ Interpreter.prototype.runCommand = function (scope, command) {
       }
     } else {
       result = {
-        object: _this.getVariableScope(scope, command) || scope,
+        object: noRootScope ? scope : _this.getVariableScope(scope, command) || scope,
         key: command
       };
     }
