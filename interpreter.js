@@ -221,6 +221,8 @@ Interpreter.prototype.getLocalScope = function (scope, context, args, callArgs) 
   return localScope;
 };
 
+Interpreter.prototype.argsToArray = [].slice;
+
 /**
  * @private
  */
@@ -332,7 +334,7 @@ Interpreter.prototype.commands = {
     var params = command.params || [];
     var func;
     var run = function (_fnThis, _fnArgs) {
-      var localScope = _this.getLocalScope(scope, _fnThis, params, _fnArgs);
+      var localScope = _this.getLocalScope(scope, _fnThis, params, _this.argsToArray.call(_fnArgs));
       var result = _this.runCommand(localScope, command.body, true);
       if (result === _this.SkipResult) {
         result = undefined;
