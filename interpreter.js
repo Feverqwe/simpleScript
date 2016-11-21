@@ -79,6 +79,7 @@ Interpreter.prototype.initOperators = function () {
     };
   });
   var assign_operators = {
+    '=': function (o,k,s,c) {return o[k]=_this.getValue(s,c)},
     '+=': function (o,k,s,c) {return o[k]+=_this.getValue(s,c)},
     '-=': function (o,k,s,c) {return o[k]-=_this.getValue(s,c)},
     '*=': function (o,k,s,c) {return o[k]*=_this.getValue(s,c)},
@@ -138,7 +139,6 @@ Interpreter.prototype.extendScope = function (customScope) {
  * @private
  */
 Interpreter.prototype.getVariableResult = function (scope, variable) {
-  var _this = this;
   if (variable.hasOwnProperty('value')) {
     return variable.value;
   } else {
@@ -272,7 +272,6 @@ Interpreter.prototype.commands = {
   },
   '{}': function (_this, scope, command) {
     var obj = {};
-    var keyValue;
     var properties = command.properties;
     if (properties) {
       for (var i = 0, len = properties.length; i < len; i++) {
@@ -293,18 +292,6 @@ Interpreter.prototype.commands = {
     }
     return {
       value: arr
-    };
-  },
-  '=': function (_this, scope, command) {
-    var result;
-    var left = _this.runCommand(scope, command.left);
-    if (!left.object) {
-      throw new Error('Operator "' + key + '" error! Left is not defined!');
-    }
-    return {
-      object: left.object,
-      key: left.key,
-      value: left.object[left.key] = _this.getValue(scope, command.right)
     };
   },
   delete: function (_this, scope, command) {
@@ -332,11 +319,11 @@ Interpreter.prototype.commands = {
       value: result
     };
   },
-  break: function (_this, scope, command) {
+  break: function (_this, scope) {
     scope.break = true;
     return _this.SkipResult;
   },
-  continue: function (_this, scope, command) {
+  continue: function (_this, scope) {
     scope.continue = true;
     return _this.SkipResult;
   },
@@ -549,7 +536,6 @@ Interpreter.prototype.commands = {
  * @private
  */
 Interpreter.prototype.getVariableScope = function (scope, variable) {
-  var _this = this;
   while (!scope.hasOwnProperty(variable)) {
     scope = scope.__parent__;
     if (scope === undefined) {
