@@ -598,4 +598,8 @@ Interpreter.prototype.runScript = function (script) {
   return _this.execScript(scope, script, {value: undefined});
 };
 
-module.exports = Interpreter;
+if (typeof module !== 'undefined') {
+  module.exports = Interpreter;
+} else {
+  return Interpreter;
+}
