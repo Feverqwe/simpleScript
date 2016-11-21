@@ -209,23 +209,17 @@ Interpreter.prototype.typeMap = {
  * @private
  */
 Interpreter.prototype.getLocalScope = function (scope, context, args, callArgs) {
-  callArgs = callArgs || [];
-
   var localScope = Object.create(scope);
   localScope.__parent__ = scope;
   localScope['arguments'] = callArgs;
   localScope.this = context;
 
-  if (args) {
-    for (var i = 0, len = args.length; i < len; i++) {
-      localScope[args[i]] = callArgs[i];
-    }
+  for (var i = 0, len = args.length; i < len; i++) {
+    localScope[args[i]] = callArgs[i];
   }
 
   return localScope;
 };
-
-var argsToArray = [].slice;
 
 /**
  * @private
@@ -335,17 +329,28 @@ Interpreter.prototype.commands = {
     };
   },
   function: function (_this, scope, command) {
-    return {
-      value: function () {
-        var localScope = _this.getLocalScope(scope, this, command.params, argsToArray.call(arguments));
-        var result = _this.runCommand(localScope, command.body, true);
-        if (result === _this.SkipResult) {
-          result = undefined;
-        }
-        if (localScope.hasOwnProperty('return') && localScope.return === true) {
-          return _this.getVariableResult(localScope, result);
-        }
+    var params = command.params || [];
+    var func;
+    var run = function (_fnThis, _fnArgs) {
+      var localScope = _this.getLocalScope(scope, _fnThis, params, _fnArgs);
+      var result = _this.runCommand(localScope, command.body, true);
+      if (result === _this.SkipResult) {
+        result = undefined;
       }
+      if (localScope.hasOwnProperty('return') && localScope.return === true) {
+        return _this.getVariableResult(localScope, result);
+      }
+    };
+
+    switch (params.length) {
+      case 1: func = function (a) {return run(this, arguments);}; break;
+      case 2: func = function (a,b) {return run(this, arguments);}; break;
+      case 3: func = function (a,b,c) {return run(this, arguments);}; break;
+      default: func = function () {return run(this, arguments);};
+    }
+
+    return {
+      value: func
     };
   },
   statement: function (_this, scope, command) {
