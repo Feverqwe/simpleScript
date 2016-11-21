@@ -124,6 +124,20 @@ Interpreter.prototype.initOperators = function () {
       };
     };
   });
+  var sab_operators = {
+    'in': function (s,a,b) {return _this.getValue(s, a) in _this.getValue(s,b)},
+    'instanceof': function (s,a,b) {return _this.getValue(s, a) instanceof _this.getValue(s,b)},
+    '&&': function (s,a,b) {return _this.getValue(s, a) && _this.getValue(s,b)},
+    '||': function (s,a,b) {return _this.getValue(s, a) || _this.getValue(s,b)}
+  };
+  Object.keys(sab_operators).forEach(function (key) {
+    var operator = sab_operators[key];
+    commands[key] = function (_this, scope, command) {
+      return {
+        value: operator(scope, command.values[0], command.values[1])
+      };
+    };
+  });
 };
 
 Interpreter.prototype.extendScope = function (customScope) {
@@ -298,18 +312,6 @@ Interpreter.prototype.commands = {
     var variable = _this.runCommand(scope, command.value);
     return {
       value: delete variable.object[variable.key]
-    };
-  },
-  in: function (_this, scope, command) {
-    var values = _this.getValues(scope, command.values);
-    return {
-      value: values[0] in values[1]
-    };
-  },
-  instanceof: function (_this, scope, command) {
-    var values = _this.getValues(scope, command.values);
-    return {
-      value: values[0] instanceof values[1]
     };
   },
   return: function (_this, scope, command) {
@@ -519,16 +521,6 @@ Interpreter.prototype.commands = {
       }
     }
     return result;
-  },
-  '&&': function (_this, scope, command) {
-    return {
-      value: _this.getValue(scope, command.values[0]) && _this.getValue(scope, command.values[1])
-    };
-  },
-  '||': function (_this, scope, command) {
-    return {
-      value: _this.getValue(scope, command.values[0]) || _this.getValue(scope, command.values[1])
-    };
   }
 };
 
