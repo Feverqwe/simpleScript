@@ -125,10 +125,10 @@ Interpreter.prototype.initOperators = function () {
     };
   });
   var sab_operators = {
-    'in': function (s,a,b) {return _this.getValue(s, a) in _this.getValue(s,b)},
-    'instanceof': function (s,a,b) {return _this.getValue(s, a) instanceof _this.getValue(s,b)},
-    '&&': function (s,a,b) {return _this.getValue(s, a) && _this.getValue(s,b)},
-    '||': function (s,a,b) {return _this.getValue(s, a) || _this.getValue(s,b)}
+    'in': function (s,a,b) {return _this.getValue(s,a) in _this.getValue(s,b)},
+    'instanceof': function (s,a,b) {return _this.getValue(s,a) instanceof _this.getValue(s,b)},
+    '&&': function (s,a,b) {return _this.getValue(s,a) && _this.getValue(s,b)},
+    '||': function (s,a,b) {return _this.getValue(s,a) || _this.getValue(s,b)}
   };
   Object.keys(sab_operators).forEach(function (key) {
     var operator = sab_operators[key];
