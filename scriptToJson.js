@@ -93,10 +93,7 @@ var types = {
   },
   Literal: function (item) {
     if (item.regex) {
-      return {type: 'call', isNew: true, callee: 'RegExp', params: [
-        {type: 'raw', data: item.regex.pattern},
-        {type: 'raw', data: item.regex.flags}
-      ]};
+      return {type: 'regexp', pattern: item.regex.pattern, flags: item.regex.flags};
     } else {
       return {type: 'raw', data: item.value};
     }

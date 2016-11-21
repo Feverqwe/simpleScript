@@ -522,6 +522,11 @@ Interpreter.prototype.commands = {
       }
     }
     return result;
+  },
+  regexp: function (_this, scope, command) {
+    return {
+      value: new RegExp(command.pattern, command.flags)
+    }
   }
 };
 
