@@ -87,5 +87,17 @@ module.exports = function (env) {
       });
       assert.equal([2,1].join(), getJsResult(code), getJsonResult(code));
     });
+    it('trim', function() {
+      var code = getCode(function () {
+        "".trim();
+      });
+      assert.equal("", getJsResult(code), getJsonResult(code));
+    });
+    it('empty key', function() {
+      var code = getCode(function () {
+        JSON.stringify({'':''})
+      });
+      assert.equal(JSON.stringify({'':''}), getJsResult(code), getJsonResult(code));
+    });
   });
 };

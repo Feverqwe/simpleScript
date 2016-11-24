@@ -96,7 +96,7 @@ Interpreter.prototype.initOperators = function () {
     var operator = assign_operators[key];
     commands[key] = function (_this, scope, command) {
       var left = _this.runCommand(scope, command.left);
-      if (!left.object) {
+      if (left.object === undefined) {
         throw new Error('Operator "' + key + '" error! Left is not defined!');
       }
       return {
@@ -114,7 +114,7 @@ Interpreter.prototype.initOperators = function () {
     var operator = inc_operators[key];
     commands[key] = function (_this, scope, command) {
       var left = _this.runCommand(scope, command.left);
-      if (!left.object) {
+      if (left.object === undefined) {
         throw new Error('Operator "' + key + '" error! Left is not defined!');
       }
       return {
@@ -246,7 +246,7 @@ Interpreter.prototype.commands = {
 
     var callee = _this.runCommand(scope, command.callee);
     var fn;
-    if (!callee.object) {
+    if (callee.object === undefined) {
       if (!callee.value) {
         throw new Error('Operator "call" error! Function not defined!');
       }
@@ -423,7 +423,7 @@ Interpreter.prototype.commands = {
       key = left.key;
     }
 
-    if (!object) {
+    if (object === undefined) {
       throw new Error('Operator "forIn" error! Left is not defined!');
     }
 
