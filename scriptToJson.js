@@ -228,6 +228,7 @@ var types = {
   UnaryExpression: function (item) {
     return {
       type: item.operator,
+      unary: true,
       value: parseSection(item.argument)
     }
   },

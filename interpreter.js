@@ -30,8 +30,8 @@ Interpreter.prototype.initOperators = function () {
   var _this = this;
   var commands = _this.commands;
   var arith_operators = {
-    '+': function (a,b) {return a+b},
-    '-': function (a,b) {return a-b},
+    '+': function (a,b,u) {return u?+b:a+b},
+    '-': function (a,b,u) {return u?-b:a-b},
     '*': function (a,b) {return a*b},
     '/': function (a,b) {return a/b},
     '%': function (a,b) {return a%b},
@@ -54,13 +54,13 @@ Interpreter.prototype.initOperators = function () {
     var operator = arith_operators[key];
     commands[key] = function (_this, scope, command) {
       var values;
-      if (command.value !== undefined) {
+      if (command.unary) {
         values = [0, _this.getValue(scope, command.value)];
       } else {
         values = _this.getValues(scope, command.values);
       }
       return {
-        value: operator(values[0], values[1])
+        value: operator(values[0], values[1], command.unary)
       };
     };
   });
