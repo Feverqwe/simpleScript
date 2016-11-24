@@ -298,7 +298,9 @@ Interpreter.prototype.commands = {
     var len = values.length;
     var arr = new Array(len);
     for (var i = 0; i < len; i++) {
-      arr[i] = _this.getValue(scope, values[i]);
+      if (values[i] !== null) {
+        arr[i] = _this.getValue(scope, values[i]);
+      }
     }
     return {
       value: arr

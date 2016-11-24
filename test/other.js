@@ -99,5 +99,23 @@ module.exports = function (env) {
       });
       assert.equal(JSON.stringify({'':''}), getJsResult(code), getJsonResult(code));
     });
+    it('empty array', function() {
+      var code = getCode(function () {
+        r = 0;
+        t=[,,]
+        t.forEach(function(a){r++});
+        r
+      });
+      assert.equal(0, getJsResult(code), getJsonResult(code));
+    });
+    it('empty array', function() {
+      var code = getCode(function () {
+        r = 0;
+        t=[,undefined,]
+        t.forEach(function(a){r++});
+        r
+      });
+      assert.equal(1, getJsResult(code), getJsonResult(code));
+    });
   });
 };
