@@ -117,5 +117,13 @@ module.exports = function (env) {
       });
       assert.equal(1, getJsResult(code), getJsonResult(code));
     });
+    it('unary operators', function() {
+      var code = getCode(function () {
+        var a = +'1234';
+        var b = +'ABC';
+        a + '-' + b;
+      });
+      assert.equal('1234-NaN', getJsResult(code), getJsonResult(code));
+    });
   });
 };
