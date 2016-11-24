@@ -41,7 +41,8 @@ var stripFn = function (code) {
 
   /*var fs = require('fs');
   var jsScriptFromFile = fs.readFileSync('./tmp/lodash.min.js').toString();
-  jsScript = jsScriptFromFile + '\n\n' + jsScript;*/
+  jsScript = jsScriptFromFile + '\n\n' + jsScript;
+  jsScript = uglifyJs.minify(jsScript, {fromString: true}).code;*/
 
   console.time('jsScript');
   var result;
