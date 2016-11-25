@@ -94,7 +94,7 @@ module.exports = function (env) {
       });
       assert.equal(4, getJsResult(code), getJsonResult(code));
     });
-    it('switch', function() {
+    /*it('switch', function() {
       var code = getCode(function () {
         var a = 2+2
         switch (a) {
@@ -130,7 +130,7 @@ module.exports = function (env) {
         }
       });
       assert.equal('d', getJsResult(code), getJsonResult(code));
-    });
+    });*/
     it('throw', function() {
       var code = getCode(function () {
         try {
