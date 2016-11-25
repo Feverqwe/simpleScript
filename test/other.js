@@ -162,5 +162,19 @@ module.exports = function (env) {
       });
       assert.equal('t1t2', getJsResult(code), getJsonResult(code));
     });
+    it('FunctionDeclaration', function() {
+      var code = getCode(function () {
+        var r = '';
+        var t1 = function t2(t2) {
+          if (typeof t1 === 'function') {
+            r += '1';
+          }
+          r += t2;
+        };
+        t1(1);
+        r
+      });
+      assert.equal('11', getJsResult(code), getJsonResult(code));
+    });
   });
 };
