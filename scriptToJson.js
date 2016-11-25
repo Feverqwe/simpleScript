@@ -309,6 +309,9 @@ var types = {
     return 'this';
   },
   SwitchStatement: function (item) {
+    console.error(JSON.stringify(item));
+    throw "SwitchStatement is not supported!";
+
     return {
       type: 'statement',
       body: item.cases.map(function (_case) {
