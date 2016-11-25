@@ -359,10 +359,6 @@ Interpreter.prototype.commands = {
       default: func = function () {return run(this, arguments);};
     }
 
-    if (command.name) {
-      func.name = _this.getObjectProperty(scope, command.name);
-    }
-
     return {
       value: func
     };
