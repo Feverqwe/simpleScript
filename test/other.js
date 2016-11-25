@@ -176,5 +176,11 @@ module.exports = function (env) {
       });
       assert.equal('11', getJsResult(code), getJsonResult(code));
     });
+    it('FunctionDeclaration', function() {
+      var code = getCode(function () {
+        function a() {}
+      });
+      assert.equal(undefined, getJsResult(code), getJsonResult(code));
+    });
   });
 };
