@@ -36,8 +36,15 @@ var types = {
     if (!params.length) {
       params = undefined;
     }
+
+    var name = undefined;
+    if (item.id) {
+      name = parseSection(item.id);
+    }
+
     return {
       type: 'function',
+      name: name,
       params: params,
       body: parseSection(item.body)
     };
@@ -49,8 +56,15 @@ var types = {
     if (!params.length) {
       params = undefined;
     }
+
+    var name = undefined;
+    if (item.id) {
+      name = parseSection(item.id);
+    }
+
     var value = {
       type: 'function',
+      name: name,
       params: params,
       body: parseSection(item.body)
     };
@@ -58,9 +72,8 @@ var types = {
     if (item.id) {
       value = {
         type: 'var',
-        // functionDeclaration: true,
         values: [
-          {key: parseSection(item.id, item), value: value}
+          {key: parseSection(item.id), value: value}
         ]
       };
     }
@@ -383,15 +396,23 @@ var ScriptToJson = function (options) {
   this.options = options || {};
 };
 
+ScriptToJson.prototype.getAst = function (code) {
+  return acorn.parse(code);
+};
+
+ScriptToJson.prototype.astToJson = function (ast) {
+  var jsonScript = astToJson(ast);
+  return JSON.parse(JSON.stringify(jsonScript));
+};
+
 ScriptToJson.prototype.getJson = function (code) {
-  var ast = acorn.parse(code);
+  var ast = this.getAst(code);
 
   if (this.options.debug) {
     console.log('ast', JSON.stringify(ast));
   }
 
-  var jsonScript = astToJson(ast);
-  return JSON.parse(JSON.stringify(jsonScript));
+  return this.astToJson(ast);
 };
 
 module.exports = ScriptToJson;

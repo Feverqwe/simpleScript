@@ -125,5 +125,42 @@ module.exports = function (env) {
       });
       assert.equal('1234-NaN', getJsResult(code), getJsonResult(code));
     });
+    it('FunctionDeclaration', function() {
+      var code = getCode(function () {
+        var a1 = function a2() {};
+        [typeof a1, typeof a2].join(',')
+      });
+      assert.equal('function,undefined', getJsResult(code), getJsonResult(code));
+    });
+    it('FunctionDeclaration', function() {
+      var code = getCode(function () {
+        function a2() {};
+        typeof a2
+      });
+      assert.equal('function', getJsResult(code), getJsonResult(code));
+    });
+    it('FunctionExpression', function() {
+      var code = getCode(function () {
+        (function a2() {});
+        typeof a2
+      });
+      assert.equal('undefined', getJsResult(code), getJsonResult(code));
+    });
+    it('FunctionExpression', function() {
+      var code = getCode(function () {
+        var r = '';
+        var t1 = function t2() {
+          if (typeof t1 === "function") {
+            r = 't1';
+          }
+          if (typeof t2 === "function") {
+            r += 't2';
+          }
+        };
+        t1();
+        r;
+      });
+      assert.equal('t1t2', getJsResult(code), getJsonResult(code));
+    });
   });
 };

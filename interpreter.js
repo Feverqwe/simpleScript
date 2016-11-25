@@ -337,6 +337,10 @@ Interpreter.prototype.commands = {
     var func;
     var run = function (_fnThis, _fnArgs) {
       var localScope = _this.getLocalScope(scope, _fnThis, params, _this.argsToArray.call(_fnArgs));
+      if (command.name) {
+        var key = _this.getObjectProperty(scope, command.name);
+        localScope[key] = func;
+      }
       var result = _this.runCommand(localScope, command.body, true);
       if (result === _this.SkipResult) {
         result = undefined;
