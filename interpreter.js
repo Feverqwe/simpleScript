@@ -334,7 +334,7 @@ Interpreter.prototype.commands = {
   },
   function: function (_this, scope, command) {
     var params = command.params || [];
-    var fnName = command.name && _this.getObjectProperty(scope, command.name);
+    var fnName = command.name !== undefined && _this.getObjectProperty(scope, command.name);
     var setLocalFnName = params.indexOf(fnName) === -1;
     var func;
     var run = function (_fnThis, _fnArgs) {
