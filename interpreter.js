@@ -334,14 +334,13 @@ Interpreter.prototype.commands = {
   },
   function: function (_this, scope, command) {
     var params = command.params || [];
+    var fnName = command.name && _this.getObjectProperty(scope, command.name);
+    var setLocalFnName = params.indexOf(fnName) === -1;
     var func;
     var run = function (_fnThis, _fnArgs) {
       var localScope = _this.getLocalScope(scope, _fnThis, params, _this.argsToArray.call(_fnArgs));
-      if (command.name) {
-        var key = _this.getObjectProperty(scope, command.name);
-        if (!localScope.hasOwnProperty(key)) {
-          localScope[key] = func;
-        }
+      if (setLocalFnName) {
+        localScope[fnName] = func;
       }
       var result = _this.runCommand(localScope, command.body, true);
       if (result === _this.SkipResult) {
