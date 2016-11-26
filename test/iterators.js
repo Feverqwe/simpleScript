@@ -85,6 +85,21 @@ module.exports = function (env) {
       });
       assert.equal(3, getJsResult(code), getJsonResult(code));
     });
+    it('forIn fn', function() {
+      var code = getCode(function () {
+        var fn = function () {
+          return {
+            p1: 1,
+            p2: 2
+          };
+        };
+        var t;
+        for(var p in t=fn()) {
+          t[p] = t[p] + 1
+        }
+      });
+      assert.equal(3, getJsResult(code), getJsonResult(code));
+    });
     it('return', function() {
       var code = getCode(function () {
         function square(x) {
