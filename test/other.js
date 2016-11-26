@@ -56,6 +56,20 @@ module.exports = function (env) {
     });
     it('regexp', function() {
       var code = getCode(function () {
+        var re = new RegExp("test");
+        re.test('te1st');
+      });
+      assert.equal(false, getJsResult(code), getJsonResult(code));
+    });
+    it('regexp', function() {
+      var code = getCode(function () {
+        var re = new RegExp("test");
+        re.test('test');
+      });
+      assert.equal(true, getJsResult(code), getJsonResult(code));
+    });
+    it('regexp', function() {
+      var code = getCode(function () {
         var re = new RegExp(/test/);
         re.test('te1st');
       });
